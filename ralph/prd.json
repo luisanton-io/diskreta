@@ -207,7 +207,7 @@
         "Verify in browser"
       ],
       "priority": 11,
-      "passes": false,
+      "passes": true,
       "notes": ""
     },
     {

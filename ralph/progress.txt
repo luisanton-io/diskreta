@@ -181,3 +181,20 @@ Started: Sun Mar 29 19:17:31 CEST 2026
   - The old `useHandleDeleteChat` handler is still used by ChatHeader (US-010) — keep it until that's redesigned
   - Avatar initials: first 2 characters of nick uppercased is a simple fallback
 ---
+
+## 2026-03-29 - US-009
+- Rebuilt user search dialog using shadcn Dialog + Tailwind, replacing Bootstrap components
+- Files changed:
+  - Rewritten: src/pages/Main/SideHeader/SearchDialog.tsx — self-contained shadcn Dialog with trigger button, search input with debounce, user results list, empty states
+  - Simplified: src/pages/Main/SideHeader/index.tsx — removed UIStore dialog dependency, SearchDialog now renders its own trigger
+- Features:
+  - Search icon in input, loading spinner, error display
+  - User results with avatar initials + nick
+  - Empty state when no results or no query
+  - Dialog resets state on close
+  - Clicking a user creates chat (if new) and navigates to it
+- **Learnings for future iterations:**
+  - Self-contained Dialog pattern (component manages own open state + trigger) is cleaner than routing through UIStore dialog for components that don't need shared dialog state
+  - Removed react-bootstrap Spinner/Form/ListGroup/Container/Row/Col imports — all replaced with shadcn + Tailwind equivalents
+  - Removed react-toastify dependency for error display in favor of inline error text (simpler, no external dep)
+---
