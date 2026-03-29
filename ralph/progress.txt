@@ -8,7 +8,7 @@
 - Vite 6.x used (not 8.x) due to Node 20.10 on this machine; Vite 8 requires Node 20.19+
 - Dev server runs on port 3000 with proxy to backend at localhost:5001
 - Vite resolve aliases must be added for each src/ subdirectory (e.g. `stores: path.resolve(__dirname, "src/stores")`) — tsconfig baseUrl alone doesn't work for Vite
-- Use `useAuthStore.getState()` for non-React contexts (API interceptors, refreshToken); use `useAuthStore(state => state.xxx)` inside React components/hooks
+- Use `useXxxStore.getState()` for non-React contexts (API interceptors, refreshToken, event handlers inside useEffect); use `useXxxStore(state => state.xxx)` inside React components/hooks
 - Zustand stores use `skipHydration: true` for encrypted persistence — call `setEncryptionDigest(digest)` then `store.persist.rehydrate()` after login
 - Zustand stores are in src/stores/ (auth.ts, chats.ts, ui.ts); encrypted middleware in src/stores/middleware/encrypted-storage.ts
 
@@ -73,4 +73,38 @@ Started: Sun Mar 29 19:17:31 CEST 2026
   - Login flow with Zustand: call `setEncryptionDigest(digest)` → `useAuthStore.persist.rehydrate()` → read hydrated state
   - `useHandleDigestUpdate` was already a pure function (no Recoil hooks), so it needed no changes
   - Recoil atoms and imports still exist but are no longer used by the API layer, auth hooks, login, register, or FocusHandler
+---
+
+## 2026-03-29 - US-004b
+- Rewired Socket.IO and all message-related hooks from Recoil to Zustand
+- Files changed:
+  - Modified: src/hooks/useSocket.ts (userState → useAuthStore, chatsState → useChatsStore.getState() for typing/disconnect handlers)
+  - Modified: src/hooks/useActiveChat.ts (chatsState/userState → useChatsStore/useAuthStore)
+  - Modified: src/hooks/useUpdateMessage.ts (setChats Recoil → useChatsStore.updateMessage)
+  - Modified: src/hooks/useDisplayTimestamp.ts (timestampState atom → useUIStore)
+  - Modified: src/pages/Main/handlers/useArchiveMessage.tsx (chatsState Recoil → useChatsStore.getState())
+  - Modified: src/pages/Main/handlers/useHandleDeleteChat.tsx (chatsState Recoil → useChatsStore.deleteChat)
+  - useMessageStatus.tsx needed no changes — it only depends on useUpdateMessage which was rewired
+- **Learnings for future iterations:**
+  - For Recoil's functional `setChats(chats => ...)` updater pattern, Zustand equivalent is `useChatsStore.getState()` to read + `setChats(newValue)` to write
+  - Inside useEffect callbacks and event handlers, use `useChatsStore.getState()` for fresh state reads (not stale closure values)
+  - After this story, no files in src/hooks/ or src/pages/Main/handlers/ import from Recoil or atoms/ anymore
+  - The chats store's `updateMessage`, `deleteChat`, and `setTyping` methods map cleanly to what the hooks needed
+---
+
+## 2026-03-29 - US-004c
+- Removed Recoil completely — all remaining components rewired to Zustand
+- Files changed:
+  - Deleted: entire src/atoms/ directory (9 files: chats.ts, dialog.ts, effects/persist.ts, focus.ts, replyingTo.ts, sessionTimeout.ts, theme.ts, timestamp.ts, user.ts)
+  - Modified: src/App.tsx (removed RecoilNexus, useRecoilCallback, useRecoilValue → useAuthStore), src/index.tsx (removed RecoilRoot)
+  - Modified: src/components/Dialog.tsx (useRecoilState/useSetRecoilState → useUIStore)
+  - Modified: src/pages/Main/index.tsx, Chat/ChatBody.tsx, Chat/UsersReaction.tsx, Chat/Message.tsx, Chat/MessageInput.tsx, Conversations/index.tsx, Settings/index.tsx, Settings/Sections/SessionTimeout.tsx, Settings/Sections/Theme.tsx, Settings/Sections/ManageData.tsx, SideHeader/SearchDialog.tsx, SideHeader/index.tsx
+  - Modified: src/pages/Login/handlers/useHandleMnemonicSubmit.tsx (removed defaultChats import, inlined `{}`)
+  - Modified: vite.config.ts (removed atoms alias)
+  - Removed deps: recoil, recoil-nexus, recoil-persist
+- **Learnings for future iterations:**
+  - Recoil's `themeState` and `sessionTimeoutState` were selectors derived from user settings — Zustand equivalent is reading directly from `useAuthStore(s => s.user?.settings.theme)` and using `updateSettings()` to write
+  - Recoil's `setDialog(dialog => {...dialog, ...})` functional updater pattern doesn't work with Zustand's plain setter — replace with direct value: `setDialog({...})`
+  - When removing a path alias from vite.config.ts, no need to touch tsconfig.json if using baseUrl
+  - `defaultChats` from atoms/chats.ts was just `{}` — can be inlined
 ---
