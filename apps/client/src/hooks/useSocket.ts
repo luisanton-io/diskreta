@@ -23,7 +23,7 @@ export default function useSocket() {
     const { token } = user || {}
 
     const socket = useMemo(() => {
-        return !!token && io(process.env.REACT_APP_BE_DOMAIN!, { transports: ['websocket'], auth: { token } })
+        return !!token && io(import.meta.env.VITE_BE_DOMAIN || "", { transports: ['websocket'], auth: { token } })
     }, [token])
 
     const [connected, setConnected] = useState(false)

@@ -3,7 +3,7 @@ import axios from "axios";
 import { getRecoil } from "recoil-nexus";
 import { refreshToken } from "./refreshToken";
 
-const API = axios.create({ baseURL: process.env.REACT_APP_BE_DOMAIN + "/api" });
+const API = axios.create({ baseURL: (import.meta.env.VITE_BE_DOMAIN || "") + "/api" });
 
 API.interceptors.request.use(
     async (config) => {
