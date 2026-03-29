@@ -128,3 +128,15 @@ Started: Sun Mar 29 19:17:31 CEST 2026
   - When adding shadcn components, no package.json changes needed if radix-ui deps were already installed from a previous component (e.g. Button)
   - Recovery dialog Content components now use plain `<div>` instead of `<Form>` since form submission is handled by the Dialog's onConfirm button
 ---
+
+## 2026-03-29 - US-006
+- Redesigned register page using shadcn/ui + Tailwind CSS
+- Files changed:
+  - Rewritten: src/pages/Register/index.tsx — replaced Bootstrap Container/Row/Col/Form with shadcn Card, Input, Label, Button + Tailwind layout; added nick availability check on blur with inline error, loading spinner
+  - Rewritten: src/pages/Register/SeedDialog.tsx — replaced Bootstrap Alert/Container/Row/Col with Tailwind grid (4 cols x 6 rows), destructive alert banner for warning
+- **Learnings for future iterations:**
+  - SeedDialog uses a 4-column grid with `grid-cols-4 gap-2` to display 24 words (6 rows)
+  - The Dialog component's title uses `submitLabel` to determine header text — "I have saved my seed phrase" maps to the default "Confirm" title
+  - Nick availability check on blur uses the existing `GET /users?nick=X&exact=true` endpoint — 200 means taken, error means available
+  - Registration flow is unchanged: submit → check nick → show mnemonic dialog → onConfirm generates keys → API post → navigate
+---
