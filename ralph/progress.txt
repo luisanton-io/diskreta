@@ -11,6 +11,8 @@
 - Use `useXxxStore.getState()` for non-React contexts (API interceptors, refreshToken, event handlers inside useEffect); use `useXxxStore(state => state.xxx)` inside React components/hooks
 - Zustand stores use `skipHydration: true` for encrypted persistence — call `setEncryptionDigest(digest)` then `store.persist.rehydrate()` after login
 - Zustand stores are in src/stores/ (auth.ts, chats.ts, ui.ts); encrypted middleware in src/stores/middleware/encrypted-storage.ts
+- The Dialog system uses UIStore `dialog` state with `{ Content, submitLabel, cancelLabel, onConfirm }` shape — rendered by src/components/Dialog.tsx using shadcn Dialog
+- `DialogClose` exported from `components/Dialog` is still used by old Main page components (Settings, UsersReaction) — keep until those pages are redesigned
 
 # Ralph Progress Log
 Started: Sun Mar 29 19:17:31 CEST 2026
@@ -107,4 +109,22 @@ Started: Sun Mar 29 19:17:31 CEST 2026
   - Recoil's `setDialog(dialog => {...dialog, ...})` functional updater pattern doesn't work with Zustand's plain setter — replace with direct value: `setDialog({...})`
   - When removing a path alias from vite.config.ts, no need to touch tsconfig.json if using baseUrl
   - `defaultChats` from atoms/chats.ts was just `{}` — can be inlined
+---
+
+## 2026-03-29 - US-005
+- Redesigned login page using shadcn/ui + Tailwind CSS
+- Files changed:
+  - Rewritten: src/pages/Login/index.tsx — replaced Bootstrap Container/Row/Col/Form with shadcn Card, Input, Label, Button + Tailwind layout
+  - Modified: src/pages/Login/handlers/useHandleRecovery.tsx — replaced react-bootstrap Form/Form.Control with shadcn Input/Label + Tailwind
+  - Modified: src/pages/Login/handlers/useHandleMnemonicSubmit.tsx — replaced react-bootstrap Form.Control with shadcn Input/Label
+  - Modified: src/pages/Login/handlers/useHandleRegenerate.tsx — replaced react-bootstrap Form/Form.Control with shadcn Input/Label + Tailwind
+  - Rewritten: src/components/Dialog.tsx — replaced Bootstrap Modal with shadcn Dialog, kept DialogClose export for backward compat
+  - Created: src/components/ui/card.tsx, dialog.tsx, input.tsx, label.tsx (via shadcn CLI)
+- Added features: password show/hide toggle with lucide Eye/EyeOff icons, Loader2 spinner on submit
+- **Learnings for future iterations:**
+  - shadcn Dialog uses radix-ui primitives — wraps with `Dialog > DialogContent > DialogHeader/Footer`
+  - The app's Dialog system (`UIStore.dialog`) is separate from shadcn's Dialog component — the app Dialog component bridges the two
+  - `DialogClose` from `components/Dialog` is still used by old Main page components and must be kept until those are redesigned
+  - When adding shadcn components, no package.json changes needed if radix-ui deps were already installed from a previous component (e.g. Button)
+  - Recovery dialog Content components now use plain `<div>` instead of `<Form>` since form submission is handled by the Dialog's onConfirm button
 ---
