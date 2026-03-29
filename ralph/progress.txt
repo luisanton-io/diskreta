@@ -215,3 +215,16 @@ Started: Sun Mar 29 19:17:31 CEST 2026
   - Removed "Block/Report [coming soon]" placeholder — will add back when feature is actually built
   - useHandleDeleteChat no longer uses window.confirm — callers are responsible for their own confirmation UI (Conversations uses its own AlertDialog, ChatHeader uses its own)
 ---
+
+## 2026-03-30 - US-011a
+- Built ChatBody and MessageBubble components with Tailwind + shadcn ScrollArea, replacing Bootstrap classes
+- Files changed:
+  - Created: src/pages/Main/Chat/MessageBubble.tsx — simple bubble component: sent (right, bg-primary) vs received (left, bg-muted), text + timestamp only
+  - Rewritten: src/pages/Main/Chat/ChatBody.tsx — replaced Bootstrap position-relative/flex-column-reverse with shadcn ScrollArea + Tailwind flex layout, removed read receipt useEffect (deferred to US-011b), removed FloatingDate/ScrollToBottom (deferred to US-011c)
+  - Rewritten: src/pages/Main/Chat/index.tsx — replaced Bootstrap d-flex/flex-column/h-100/Col with Tailwind equivalents, removed react-bootstrap Col import
+- **Learnings for future iterations:**
+  - The old ChatBody used `flex-column-reverse` to auto-scroll to bottom — the new version uses normal chronological order (US-011c will add scroll behavior)
+  - Old Message.tsx (256 lines) has reactions, swipe, long-press, status icons, URL detection, emoji sizing — all deferred to later stories. MessageBubble is intentionally minimal
+  - shadcn ScrollArea with `flex-1` works well as the main chat container — takes remaining vertical space
+  - The `pnpm build` fails due to pre-existing Bootstrap SCSS import issue (`@import "~bootstrap/scss/bootstrap"` in src/styles/index.scss) — not related to this story, will be fixed in US-018
+---

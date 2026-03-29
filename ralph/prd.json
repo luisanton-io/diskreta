@@ -1,7 +1,7 @@
 {
   "project": "Diskreta",
   "branchName": "ralph/client-modernization",
-  "description": "Client Modernization & Push Notifications — Migrate from CRA to Vite, Bootstrap/SCSS to Tailwind + shadcn/ui, Recoil to Zustand, full UI redesign with light/dark/system theme, and add Web Push notifications",
+  "description": "Client Modernization & Push Notifications \u2014 Migrate from CRA to Vite, Bootstrap/SCSS to Tailwind + shadcn/ui, Recoil to Zustand, full UI redesign with light/dark/system theme, and add Web Push notifications",
   "userStories": [
     {
       "id": "US-001",
@@ -229,45 +229,60 @@
     },
     {
       "id": "US-011a",
-      "title": "Build message list — core rendering",
-      "description": "As a user, I want to see the message history in a chat with clear visual distinction between sent and received messages.",
+      "title": "Build ChatBody and message bubbles",
+      "description": "As a user, I want to see messages in a chat with sent messages on the right and received on the left.",
       "acceptanceCriteria": [
+        "New ChatBody component replaces the old one, using Tailwind instead of Bootstrap classes",
         "Messages rendered in chronological order (oldest at top, newest at bottom)",
-        "Sent messages aligned right with a distinct background color",
-        "Received messages aligned left with a different background color",
-        "Each message shows text content and timestamp (on click for sent messages)",
-        "Sent messages show status icons: clock (outgoing), single check (sent), double check (delivered), blue double check (read) using lucide icons",
-        "Chat auto-scrolls to bottom on new messages (only if already at bottom)",
-        "Emits read-msg for visible received messages (existing read receipt logic)",
-        "Uses shadcn ScrollArea",
-        "Styled with Tailwind",
+        "Sent messages aligned right with a distinct background color (e.g. bg-primary text-primary-foreground)",
+        "Received messages aligned left with a different background color (e.g. bg-muted)",
+        "Each message bubble shows text content and a small timestamp",
+        "Message bubbles have rounded corners and appropriate padding",
+        "Uses shadcn ScrollArea as the scrollable container",
+        "Styled with Tailwind, no Bootstrap classes",
         "Typecheck passes",
         "Verify in browser"
       ],
       "priority": 13,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "Focus ONLY on rendering message bubbles. Do not implement status icons, read receipts, auto-scroll, reactions, swipe, or long-press in this story. The old Message.tsx is 256 lines \u2014 do NOT try to port it all. Write a new simple MessageBubble component."
     },
     {
       "id": "US-011b",
-      "title": "Build message list — enhancements",
-      "description": "As a user, I want date separators, scroll-to-bottom, URL linking, and emoji rendering in the message list.",
+      "title": "Add message status icons and read receipts",
+      "description": "As a user, I want to see delivery status on my sent messages and have received messages marked as read.",
       "acceptanceCriteria": [
-        "Date separators between message groups showing Today, Yesterday, or full date",
+        "Sent messages show status icons next to the timestamp: Clock (outgoing), Check (sent), CheckCheck (delivered), blue CheckCheck (read) \u2014 using lucide-react icons",
+        "Status is read from the message object using the existing isMessageSent utility and status field",
+        "ChatBody emits read-msg socket event for visible received messages with status new (port existing logic from old ChatBody.tsx)",
+        "Typecheck passes",
+        "Verify in browser"
+      ],
+      "priority": 14,
+      "passes": false,
+      "notes": "Reuse the existing read receipt logic from the old ChatBody.tsx useEffect. The status icon mapping: outgoing->Clock, sent->Check, delivered->CheckCheck, read->CheckCheck with text-blue-500 color."
+    },
+    {
+      "id": "US-011c",
+      "title": "Add auto-scroll, scroll-to-bottom, date separators, URL linking, and emoji rendering",
+      "description": "As a user, I want the chat to auto-scroll, show date separators, and render URLs and emoji nicely.",
+      "acceptanceCriteria": [
+        "Chat auto-scrolls to bottom on new messages (only if user is already at or near the bottom)",
         "Scroll-to-bottom floating button (lucide ArrowDown icon) appears when scrolled up, click scrolls to bottom",
+        "Date separators between message groups showing Today, Yesterday, or full date",
         "URLs in message text are detected and rendered as clickable links (opens in new tab)",
         "Emoji-only messages (text containing only emoji, no other characters) rendered at larger font size",
         "Styled with Tailwind",
         "Typecheck passes",
         "Verify in browser"
       ],
-      "priority": 14,
+      "priority": 15,
       "passes": false,
-      "notes": ""
+      "notes": "The URL regex and emoji regex can be copied from the old Message.tsx. The date separator logic can be copied from the old ChatBody.tsx (compare day of adjacent messages). ScrollToBottom is a simple floating button with an onClick that scrolls the container."
     },
     {
       "id": "US-012a",
-      "title": "Build message input — text and send",
+      "title": "Build message input \u2014 text and send",
       "description": "As a user, I want to type and send encrypted text messages.",
       "acceptanceCriteria": [
         "Textarea input at bottom of chat, auto-grows with content (max ~5 lines, then scrolls)",
@@ -280,13 +295,13 @@
         "Typecheck passes",
         "Verify in browser"
       ],
-      "priority": 15,
+      "priority": 16,
       "passes": false,
       "notes": ""
     },
     {
       "id": "US-012b",
-      "title": "Build message input — media attachments",
+      "title": "Build message input \u2014 media attachments",
       "description": "As a user, I want to send images in chat with automatic compression and encryption.",
       "acceptanceCriteria": [
         "Camera/attachment button (lucide Paperclip or Camera icon) triggers file input for image capture/selection",
@@ -299,7 +314,7 @@
         "Typecheck passes",
         "Verify in browser"
       ],
-      "priority": 16,
+      "priority": 17,
       "passes": false,
       "notes": ""
     },
@@ -317,7 +332,7 @@
         "Typecheck passes",
         "Verify in browser"
       ],
-      "priority": 17,
+      "priority": 18,
       "passes": false,
       "notes": ""
     },
@@ -336,7 +351,7 @@
         "Typecheck passes",
         "Verify in browser"
       ],
-      "priority": 18,
+      "priority": 19,
       "passes": false,
       "notes": ""
     },
@@ -353,7 +368,7 @@
         "Typecheck passes",
         "Verify in browser"
       ],
-      "priority": 19,
+      "priority": 20,
       "passes": false,
       "notes": ""
     },
@@ -371,7 +386,7 @@
         "Typecheck passes",
         "Verify in browser"
       ],
-      "priority": 20,
+      "priority": 21,
       "passes": false,
       "notes": ""
     },
@@ -383,12 +398,12 @@
         "Settings gear icon (lucide Settings) in sidebar header opens a shadcn Dialog",
         "Theme section: shadcn Select to choose light / dark / system. Selecting applies immediately by toggling dark class on <html> and respecting prefers-color-scheme for system. Persisted in user settings via Zustand.",
         "Session timeout section: shadcn Select with options 15 seconds, 60 seconds, 10 minutes, 1 hour, Never. Existing FocusHandler logic applies.",
-        "Manage data section: Export button (copies encrypted JSON to clipboard using navigator.clipboard.writeText), Import button (paste JSON to restore), Delete account button (shadcn AlertDialog confirmation, calls DELETE /users/me). Do NOT use the copy-to-clipboard package — use the native navigator.clipboard API.",
+        "Manage data section: Export button (copies encrypted JSON to clipboard using navigator.clipboard.writeText), Import button (paste JSON to restore), Delete account button (shadcn AlertDialog confirmation, calls DELETE /users/me). Do NOT use the copy-to-clipboard package \u2014 use the native navigator.clipboard API.",
         "Styled with Tailwind + shadcn",
         "Typecheck passes",
         "Verify in browser"
       ],
-      "priority": 21,
+      "priority": 22,
       "passes": false,
       "notes": ""
     },
@@ -406,7 +421,7 @@
         "Typecheck passes",
         "Verify in browser"
       ],
-      "priority": 22,
+      "priority": 23,
       "passes": false,
       "notes": ""
     },
@@ -424,7 +439,7 @@
         "pnpm dev and pnpm build both succeed without errors",
         "Typecheck passes"
       ],
-      "priority": 23,
+      "priority": 24,
       "passes": false,
       "notes": ""
     },
@@ -443,7 +458,7 @@
         "Existing message queuing to MongoDB is unchanged (push is in addition to the queue)",
         "Typecheck passes"
       ],
-      "priority": 24,
+      "priority": 25,
       "passes": false,
       "notes": ""
     },
@@ -463,7 +478,7 @@
         "Typecheck passes",
         "Verify in browser"
       ],
-      "priority": 25,
+      "priority": 26,
       "passes": false,
       "notes": ""
     }
