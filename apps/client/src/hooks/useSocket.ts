@@ -1,13 +1,12 @@
 import API from "API"
 import { refreshToken } from "API/refreshToken"
-import { chatsState } from "atoms/chats"
-import { userState } from "atoms/user"
 import useArchiveMessage from "pages/Main/handlers/useArchiveMessage"
 import useMessageStatus from "pages/Main/handlers/useMessageStatus"
 import { useEffect, useMemo, useRef, useState } from "react"
 import { toast } from "react-toastify"
-import { useRecoilValue, useSetRecoilState } from "recoil"
 import { io } from "socket.io-client"
+import { useAuthStore } from "stores/auth"
+import { useChatsStore } from "stores/chats"
 import useUpdateMessage from "./useUpdateMessage"
 
 interface TimeoutMap {
@@ -18,9 +17,7 @@ interface TimeoutMap {
 
 export default function useSocket() {
 
-    const user = useRecoilValue(userState)
-
-    const { token } = user || {}
+    const token = useAuthStore(state => state.user?.token)
 
     const socket = useMemo(() => {
         return !!token && io(import.meta.env.VITE_BE_DOMAIN || "", { transports: ['websocket'], auth: { token } })
@@ -32,7 +29,6 @@ export default function useSocket() {
 
     const handleMessageStatus = useMessageStatus()
 
-    const setChats = useSetRecoilState(chatsState)
     const typingTimeouts = useRef<TimeoutMap>({})
     const updateMessage = useUpdateMessage()
 
@@ -61,34 +57,36 @@ export default function useSocket() {
 
         const handleTyping = (typing: TypingMsg) => {
 
-
             const currentTimeout = typingTimeouts.current[typing.chatId]?.[typing.sender._id]
-
-            // console.table({ currentTimeout: !!currentTimeout })
-            // console.log(typingTimeouts.current)
 
             if (currentTimeout) {
                 clearTimeout(currentTimeout)
                 delete typingTimeouts.current[typing.chatId]![typing.sender._id]
             } else {
-                setChats(chats => !chats?.[typing.chatId] ? chats : {
-                    ...chats,
-                    [typing.chatId]: {
-                        ...chats[typing.chatId],
-                        typing: [...(chats[typing.chatId]?.typing || []), typing.sender._id]
-                    }
-                })
+                const { chats, setChats } = useChatsStore.getState()
+                if (chats?.[typing.chatId]) {
+                    setChats({
+                        ...chats,
+                        [typing.chatId]: {
+                            ...chats[typing.chatId],
+                            typing: [...(chats[typing.chatId]?.typing || []), typing.sender._id]
+                        }
+                    })
+                }
             }
 
             (typingTimeouts.current[typing.chatId] ||= {})[typing.sender._id] = setTimeout(() => {
                 delete typingTimeouts.current[typing.chatId]![typing.sender._id]
-                setChats(chats => !chats?.[typing.chatId] ? chats : {
-                    ...chats,
-                    [typing.chatId]: {
-                        ...chats[typing.chatId],
-                        typing: chats[typing.chatId].typing?.filter(id => id !== typing.sender._id)
-                    }
-                })
+                const { chats, setChats } = useChatsStore.getState()
+                if (chats?.[typing.chatId]) {
+                    setChats({
+                        ...chats,
+                        [typing.chatId]: {
+                            ...chats[typing.chatId],
+                            typing: chats[typing.chatId].typing?.filter(id => id !== typing.sender._id)
+                        }
+                    })
+                }
             }, 500)
 
         }
@@ -120,13 +118,17 @@ export default function useSocket() {
 
         const onDisconnect = () => {
             toast.info("Connecting...", { position: toast.POSITION.TOP_CENTER, autoClose: false })
-            setChats(chats => chats && Object.values(chats).reduce((chats, { id }) => ({
-                ...chats,
-                [id]: {
-                    ...chats[id],
-                    typing: undefined
-                }
-            }), chats))
+            const { chats, setChats } = useChatsStore.getState()
+            if (chats) {
+                const cleared = Object.values(chats).reduce((acc, { id }) => ({
+                    ...acc,
+                    [id]: {
+                        ...acc[id],
+                        typing: undefined
+                    }
+                }), chats)
+                setChats(cleared)
+            }
             refreshToken()
             setConnected(false)
         }
@@ -155,7 +157,7 @@ export default function useSocket() {
             socket.off('connect_error', handleRefreshToken);
         }
 
-    }, [socket, archiveMessage, handleMessageStatus, setChats, updateMessage])
+    }, [socket, archiveMessage, handleMessageStatus, updateMessage])
 
     return { socket, connected }
 }

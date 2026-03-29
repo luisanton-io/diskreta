@@ -1,17 +1,15 @@
-import { chatsState } from "atoms/chats";
 import { AES, enc } from "crypto-js";
 import usePrivateKey from "hooks/usePrivateKey";
 import { util } from "node-forge";
 import { useCallback, useRef } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { toast } from "react-toastify";
-import { useSetRecoilState } from "recoil";
+import { useChatsStore } from "stores/chats";
 
 export default function useArchiveMessage() {
 
     const privateKey = usePrivateKey();
 
-    const setChats = useSetRecoilState(chatsState)
     const navigate = useNavigate()
 
     const activeChatIdRef = useRef<string>()
@@ -61,38 +59,38 @@ export default function useArchiveMessage() {
 
         const { chatId } = message
 
-        setChats(chats => {
+        const chats = useChatsStore.getState().chats
 
-            if (
-                Number.isSafeInteger(chats?.[chatId]?.indexing?.[message.hash]) // optional chaining 'indexing' for retrocompatibility
-            ) return chats
+        if (
+            Number.isSafeInteger(chats?.[chatId]?.indexing?.[message.hash]) // optional chaining 'indexing' for retrocompatibility
+        ) return
 
-            const chatToUpdate = chats?.[chatId]
+        const chatToUpdate = chats?.[chatId]
 
-            return ({
-                ...chats,
-                [chatId]: !!chatToUpdate
-                    ? {
-                        ...chatToUpdate,
-                        messages: [
-                            ...chatToUpdate.messages,
-                            message,
-                        ],
-                        indexing: {
-                            ...chatToUpdate.indexing,
-                            [message.hash]: chatToUpdate.messages.length, // new index corresponds to old length
-                        },
-                    }
-                    : {
-                        id: chatId,
-                        members: [...message.to, message.sender],
-                        messages: [message],
-                        indexing: {
-                            [message.hash]: 0,
-                        },
-                    }
-            })
+        const updatedChat = !!chatToUpdate
+            ? {
+                ...chatToUpdate,
+                messages: [
+                    ...chatToUpdate.messages,
+                    message,
+                ],
+                indexing: {
+                    ...chatToUpdate.indexing,
+                    [message.hash]: chatToUpdate.messages.length, // new index corresponds to old length
+                },
+            }
+            : {
+                id: chatId,
+                members: [...message.to, message.sender],
+                messages: [message],
+                indexing: {
+                    [message.hash]: 0,
+                },
+            }
 
+        useChatsStore.getState().setChats({
+            ...chats,
+            [chatId]: updatedChat,
         })
 
         if (showToast && chatId !== activeChatIdRef.current) {
@@ -105,7 +103,7 @@ export default function useArchiveMessage() {
             })
         }
 
-    }, [privateKey, setChats, navigate])
+    }, [privateKey, navigate])
 
     return archiveMessage
 }

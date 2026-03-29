@@ -1,10 +1,10 @@
-import { timestampState as timestampAtom } from "atoms/timestamp";
-import { useRecoilState } from "recoil";
+import { useUIStore } from "stores/ui";
 import { isMessageSent } from "util/isMessageSent";
 
 export default function useDisplayTimestamp(message: SentMessage | ReceivedMessage, index: number) {
 
-    const [timestampState, setTimestampState] = useRecoilState(timestampAtom)
+    const timestampState = useUIStore(state => state.timestamp)
+    const setTimestampState = useUIStore(state => state.setTimestamp)
 
     if (!isMessageSent(message)) return ({
         handleDisplayTimeStamp: () => { },
