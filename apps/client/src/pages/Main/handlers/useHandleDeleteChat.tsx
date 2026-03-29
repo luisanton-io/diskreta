@@ -6,9 +6,7 @@ export default function useHandleDeleteChat() {
     const navigate = useNavigate()
 
     return (id: string) => {
-        if (window.confirm("Are you sure you want to delete this chat?")) {
-            deleteChat(id)
-            navigate("/")
-        }
+        deleteChat(id)
+        navigate("/")
     }
 }
