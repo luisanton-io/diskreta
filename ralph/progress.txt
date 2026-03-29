@@ -13,6 +13,8 @@
 - Zustand stores are in src/stores/ (auth.ts, chats.ts, ui.ts); encrypted middleware in src/stores/middleware/encrypted-storage.ts
 - The Dialog system uses UIStore `dialog` state with `{ Content, submitLabel, cancelLabel, onConfirm }` shape — rendered by src/components/Dialog.tsx using shadcn Dialog
 - `DialogClose` exported from `components/Dialog` is still used by old Main page components (Settings, UsersReaction) — keep until those pages are redesigned
+- Layout uses Tailwind responsive classes: `hidden md:flex` / `flex` to toggle sidebar vs chat panel on mobile; no CSS media queries needed
+- Settings component renders its own trigger button — import it directly in SideHeader, don't try to extract the dialog content separately
 
 # Ralph Progress Log
 Started: Sun Mar 29 19:17:31 CEST 2026
@@ -139,4 +141,24 @@ Started: Sun Mar 29 19:17:31 CEST 2026
   - The Dialog component's title uses `submitLabel` to determine header text — "I have saved my seed phrase" maps to the default "Confirm" title
   - Nick availability check on blur uses the existing `GET /users?nick=X&exact=true` endpoint — 200 means taken, error means available
   - Registration flow is unchanged: submit → check nick → show mnemonic dialog → onConfirm generates keys → API post → navigate
+---
+
+## 2026-03-29 - US-007
+- Built responsive two-column layout shell with Tailwind CSS
+- Files changed:
+  - Rewritten: src/pages/Main/index.tsx — replaced Bootstrap Container/Row/Col with Tailwind flex layout + shadcn ScrollArea for sidebar
+  - Rewritten: src/pages/Main/SideHeader/index.tsx — replaced Bootstrap Button/Plus with "diskreta." branding + lucide MessageSquarePlus + shadcn Button
+  - Modified: src/pages/Main/Settings/index.tsx — replaced react-bootstrap-icons GearWideConnected with lucide Settings + shadcn Button
+  - Modified: src/styles/globals.css — added #root { height: 100% } for full-height layout
+  - Created: src/components/ui/scroll-area.tsx (via shadcn CLI)
+- Layout features:
+  - Desktop (>=768px): sidebar (w-80) + main panel side by side with border separator
+  - Mobile (<768px): one panel at a time, toggled via `hidden`/`flex` classes based on activeChatId
+  - Empty state with MessageSquare icon + "Select a conversation" when no chat active
+  - SideHeader shows "diskreta." branding with new-chat and settings icon buttons
+- **Learnings for future iterations:**
+  - Tailwind responsive `hidden md:flex` / `flex` pattern replaces CSS media query show/hide logic cleanly
+  - shadcn ScrollArea wraps radix-ui ScrollArea — good for sidebar scrollable content
+  - Settings component is self-contained (renders its own trigger button) — just include it in SideHeader
+  - #root needs explicit height: 100% since body is position: fixed with inset: 0
 ---
