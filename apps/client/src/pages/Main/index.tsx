@@ -1,8 +1,9 @@
 import { refreshToken } from "API/refreshToken";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { USER_DIGEST } from "constants/localStorage";
 import useActiveChat from "hooks/useActiveChat";
+import { MessageSquare } from "lucide-react";
 import { useEffect } from "react";
-import { Col, Container, Row } from "react-bootstrap";
 import { useNavigate } from "react-router-dom";
 import { useAuthStore } from "stores/auth";
 import { useUIStore } from "stores/ui";
@@ -35,18 +36,33 @@ export default function Main() {
         hasFocus && !!token && isTokenExpired(token) && refreshToken()
     }, [hasFocus, token])
 
-    return <Container className="pt-5 pb-4 h-100">
-        <Row className="h-100 flex-column flex-md-row" style={{ margin: 'auto' }}>
-            <Col xs={12} md={4} id="main-left" style={{ overflow: 'auto' }} data-active-chat={!!activeChatId}>
-                <SideHeader />
-                <hr />
+    const hasActiveChat = !!activeChatId
+
+    return <div className="flex h-full">
+        {/* Sidebar */}
+        <div
+            id="main-left"
+            className={`flex flex-col h-full w-full md:w-80 md:min-w-80 md:border-r md:border-white/10 ${hasActiveChat ? "hidden md:flex" : "flex"}`}
+        >
+            <SideHeader />
+            <ScrollArea className="flex-1">
                 <Conversations />
-            </Col>
-            <Col xs={12} md={8} id="main-right"
-                className="flex-grow-1"
-                data-active-chat={!!activeChatId}>
+            </ScrollArea>
+        </div>
+
+        {/* Main panel */}
+        <div
+            id="main-right"
+            className={`flex flex-col flex-1 relative h-full ${hasActiveChat ? "flex" : "hidden md:flex"}`}
+        >
+            {hasActiveChat ? (
                 <Chat />
-            </Col>
-        </Row>
-    </Container>
+            ) : (
+                <div className="flex flex-col items-center justify-center h-full text-muted-foreground gap-3">
+                    <MessageSquare className="h-12 w-12 opacity-40" />
+                    <p className="text-sm">Select a conversation</p>
+                </div>
+            )}
+        </div>
+    </div>
 }

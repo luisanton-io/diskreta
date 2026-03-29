@@ -1,5 +1,6 @@
+import { Button } from "@/components/ui/button";
 import { DialogClose } from "components/Dialog";
-import { GearWideConnected } from "react-bootstrap-icons";
+import { Settings as SettingsIcon } from "lucide-react";
 import { useUIStore } from "stores/ui";
 import ManageData from "./Sections/ManageData";
 import SessionTimeout from "./Sections/SessionTimeout";
@@ -24,10 +25,8 @@ export default function Settings() {
         })
     }
     return (
-        <GearWideConnected
-            onClick={openDialog}
-            className="cursor-pointer"
-            style={{ fontSize: '1.7em', marginInline: '1ch' }}
-        />
+        <Button variant="ghost" size="icon" onClick={openDialog} title="Settings">
+            <SettingsIcon className="h-5 w-5" />
+        </Button>
     )
 }
