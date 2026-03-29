@@ -162,3 +162,22 @@ Started: Sun Mar 29 19:17:31 CEST 2026
   - Settings component is self-contained (renders its own trigger button) — just include it in SideHeader
   - #root needs explicit height: 100% since body is position: fixed with inset: 0
 ---
+
+## 2026-03-29 - US-008
+- Built conversations list with Tailwind + shadcn components
+- Files changed:
+  - Rewritten: src/pages/Main/Conversations/index.tsx — replaced Bootstrap ListGroup/react-bootstrap-icons with shadcn Avatar, Badge, AlertDialog + Tailwind layout
+  - Created: src/components/ui/avatar.tsx, src/components/ui/badge.tsx, src/components/ui/alert-dialog.tsx (via shadcn CLI)
+- Features:
+  - Sorted by latest message timestamp (newest first)
+  - Each row: avatar with initials, recipient nicks, last message preview (or typing indicator), relative timestamp
+  - Unread badge with count
+  - Active chat highlighted with `bg-accent`
+  - Delete button on hover (desktop) with AlertDialog confirmation
+  - "You:" prefix for own messages in preview, photo emoji for media-only messages
+- **Learnings for future iterations:**
+  - shadcn AlertDialog is better than window.confirm for delete confirmations — uses radix-ui AlertDialog primitives
+  - `group` + `group-hover:flex` Tailwind pattern works well for revealing action buttons on hover
+  - The old `useHandleDeleteChat` handler is still used by ChatHeader (US-010) — keep it until that's redesigned
+  - Avatar initials: first 2 characters of nick uppercased is a simple fallback
+---
