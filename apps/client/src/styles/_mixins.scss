@@ -1,0 +1,29 @@
+.custom-scrollbar {
+    // --thumb-color: rgba(255, 255, 255, 0.4);
+    --thumb-color: var(--theme-color);
+
+    /* width */
+    &::-webkit-scrollbar {
+        width: 0.5ch;
+    }
+
+    /* Track */
+    &::-webkit-scrollbar-track {
+        background: transparent;
+    }
+
+    /* Handle */
+    &::-webkit-scrollbar-thumb {
+        cursor: pointer !important;
+        background: var(--thumb-color);
+        border-radius: 10px;
+    }
+
+    /* Handle on hover */
+    &::-webkit-scrollbar-thumb:hover {
+        background: #555;
+    }
+
+    scrollbar-width: thin;
+    scrollbar-color: var(--thumb-color) transparent;
+}

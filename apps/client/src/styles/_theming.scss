@@ -1,0 +1,128 @@
+:root {
+    --theme-color: white;
+    --msg-tick-read: #0dcaf0;
+    --reaction-bg: rgba(13, 13, 13, 0.85);
+}
+
+[data-theme] {
+    --background: gray;
+}
+
+[data-theme="Default"] {
+    @extend .font-monospace;
+    --background: #{$default-background};
+    background-size: 400% 400%;
+}
+
+@mixin sans {
+    font-family: "Red Hat Display", sans-serif;
+    font-size: 16px;
+}
+
+[data-theme="Deep Blue"] {
+    @include sans;
+    --background: #{$deepBlue-background};
+    background-size: 400% 400%;
+    @media (min-width: 768px) {
+        background-size: 110% 120%;
+    }
+}
+
+[data-theme="Sunny"] {
+    @include sans;
+    --hue-rotation: 220deg;
+    --background: #{$sansLight-background};
+    --theme-color: rgb(149, 81, 4);
+    --theme-color-contrast: rgb(255, 238, 209);
+    --reaction-bg: var(--theme-color-contrast);
+
+    color: var(--theme-color);
+
+    --bs-light-rgb: var(--theme-color);
+    --bs-border-color: var(--theme-color);
+    --bs-border-color: var(--theme-color);
+
+    ::placeholder {
+        color: var(--theme-color);
+    }
+    [class*="light"] {
+        --bs-btn-color: var(--theme-color);
+        --bs-btn-border-color: var(--theme-color);
+    }
+
+    .modal-dialog {
+        --bg-color: #{change-color($color: rgb(255, 238, 209), $alpha: 0.95)};
+        [class*="warning"] {
+            filter: invert(1) hue-rotate(310deg);
+        }
+    }
+
+    .dropdown-item[class*="white"] {
+        color: var(--theme-color-contrast) !important;
+    }
+
+    #main-right {
+        #message-container {
+            .message-wrapper {
+                .reactions {
+                    filter: drop-shadow(0px 0px 1px var(--theme-color));
+                }
+                .message.received {
+                    background-color: #33250d9a;
+                    color: var(--theme-color-contrast);
+                    box-shadow: inset 1px 1px 6px #0a0a0a09, inset -1px -1px 6px #0a0a0a09;
+                }
+
+                .message.sent {
+                    --tint: #e6b56d40;
+                    --msg-tick-read: #ff9900;
+                    background-color: #fff5e3;
+                    color: var(--theme-color);
+                    box-shadow: -2px -2px 12px -2px var(--tint), 4px 4px 8px -3px #7c581518;
+                    border: 1px solid var(--tint);
+                }
+            }
+        }
+    }
+}
+
+[data-theme="Hacker"] {
+    --background: #{$sansDark-background};
+
+    * {
+        color: $hacker-color !important;
+        border-color: $hacker-color !important;
+    }
+
+    *,
+    .font-monospace {
+        font-family: "Source Code Pro", monospace !important;
+    }
+
+    input:active,
+    input:active,
+    input:hover,
+    button:hover,
+    button:active,
+    button:focus {
+        background: transparent !important;
+    }
+
+    ::placeholder {
+        color: $hacker-color !important;
+        opacity: 0.8;
+    }
+
+    .message.received {
+        background-color: black !important;
+        border-color: change-color($color: $white, $alpha: 0.1) !important;
+    }
+
+    .message.sent {
+        border-color: change-color($color: $hacker-color, $alpha: 0.5) !important;
+    }
+
+    .message {
+        border-radius: 0px !important;
+    }
+}

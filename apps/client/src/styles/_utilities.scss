@@ -1,0 +1,19 @@
+.cursor-pointer {
+    cursor: pointer;
+}
+
+.gradient-bg {
+    background: var(--background);
+}
+
+.btn-submit {
+    @extend .rounded-0;
+    @extend .border-3;
+    &:not(:hover) {
+        color: var(--theme-color);
+    }
+}
+
+.text-white {
+    color: var(--theme-color) !important;
+}
