@@ -198,3 +198,20 @@ Started: Sun Mar 29 19:17:31 CEST 2026
   - Removed react-bootstrap Spinner/Form/ListGroup/Container/Row/Col imports — all replaced with shadcn + Tailwind equivalents
   - Removed react-toastify dependency for error display in favor of inline error text (simpler, no external dep)
 ---
+
+## 2026-03-30 - US-010
+- Built chat header with shadcn/Tailwind, replacing Bootstrap Dropdown and react-bootstrap-icons
+- Files changed:
+  - Rewritten: src/pages/Main/Chat/ChatHeader.tsx — replaced Bootstrap Dropdown/ArrowLeftShort/ThreeDots with shadcn DropdownMenu, AlertDialog + lucide ArrowLeft/MoreVertical/Trash2
+  - Modified: src/pages/Main/handlers/useHandleDeleteChat.tsx — removed window.confirm (confirmation now handled by AlertDialog in ChatHeader)
+  - Created: src/components/ui/dropdown-menu.tsx (via shadcn CLI)
+- Features:
+  - Back button (ArrowLeft) visible only on mobile via `md:hidden`
+  - Recipient nicks displayed with truncation
+  - DropdownMenu with "Delete Chat" option (destructive styling)
+  - AlertDialog confirmation before deletion (replaces window.confirm)
+- **Learnings for future iterations:**
+  - shadcn DropdownMenu + AlertDialog pair works well for destructive actions — DropdownMenuItem triggers AlertDialog state, AlertDialog handles confirmation
+  - Removed "Block/Report [coming soon]" placeholder — will add back when feature is actually built
+  - useHandleDeleteChat no longer uses window.confirm — callers are responsible for their own confirmation UI (Conversations uses its own AlertDialog, ChatHeader uses its own)
+---
