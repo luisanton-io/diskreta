@@ -1,10 +1,9 @@
-import { userState } from "atoms/user"
+import { useAuthStore } from "stores/auth"
 import { pki } from "node-forge"
 import { useMemo } from "react"
-import { useRecoilValue } from "recoil"
 
 export default function usePrivateKey() {
-    const user = useRecoilValue(userState)
+    const user = useAuthStore(state => state.user)
     const privateKey = useMemo(() => {
         try {
             return (!user?.privateKey) ? null : pki.privateKeyFromPem(user.privateKey)

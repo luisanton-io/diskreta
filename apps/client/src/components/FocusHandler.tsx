@@ -1,17 +1,11 @@
-import { focusState } from "atoms/focus";
-import { sessionTimeoutState } from "atoms/sessionTimeout";
-import { userState } from "atoms/user";
 import { useEffect } from "react";
-import { useNavigate } from "react-router-dom";
-import { useRecoilState, useRecoilValue, useSetRecoilState } from "recoil";
+import { useUIStore } from "stores/ui";
 import { isMobile } from "react-device-detect";
 
 export default function FocusHandler() {
-    const navigate = useNavigate()
-    const setUser = useSetRecoilState(userState)
-
-    const [focus, setFocus] = useRecoilState(focusState)
-    const sessionTimeout = useRecoilValue(sessionTimeoutState)
+    const setFocus = useUIStore(state => state.setFocus)
+    const focus = useUIStore(state => state.focus)
+    const sessionTimeout = useUIStore(state => state.sessionTimeout)
 
     useEffect(() => {
         const focusDaemon = setInterval(() => {
@@ -33,7 +27,7 @@ export default function FocusHandler() {
         return () => {
             clearTimeout(logoutTimeout)
         }
-    }, [focus, navigate, setUser, sessionTimeout])
+    }, [focus, sessionTimeout])
 
     return null
 }

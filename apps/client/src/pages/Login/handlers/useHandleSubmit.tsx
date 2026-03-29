@@ -1,23 +1,19 @@
 import API from "API"
-import { chatsState } from "atoms/chats"
-import { userState } from "atoms/user"
 import { AxiosError } from "axios"
 import { defaultSettings } from "constants/defaultSettings"
 import { pki, util } from "node-forge"
 import { useState } from "react"
 import { useNavigate } from "react-router-dom"
 import { toast } from "react-toastify"
-import { useSetRecoilState } from "recoil"
+import { useAuthStore } from "stores/auth"
+import { useChatsStore } from "stores/chats"
+import { setEncryptionDigest } from "stores/middleware/encrypted-storage"
 import { createDigest } from "util/createDigest"
-import decryptLocalStorage from "util/decryptLocalStorage"
 import useHandleRegenerate from "./useHandleRegenerate"
 
 export default function useHandleSubmit(nick: string, password: string) {
 
     const [loading, setLoading] = useState(false)
-
-    const setUser = useSetRecoilState(userState)
-    const setChats = useSetRecoilState(chatsState)
 
     const navigate = useNavigate()
 
@@ -40,24 +36,31 @@ export default function useHandleSubmit(nick: string, password: string) {
                 data: { token: encryptedToken, refreshToken, user: responseUser }
             } = await API.post<LoginResponse>("/users/session", { nick, digest })
 
-            // We try to decrypt the store with the current user digest
-
+            // Rehydrate Zustand stores from encrypted localStorage
             try {
                 toast.update(toastId, { render: "Decrypting user data..." })
-                const { chats, user } = decryptLocalStorage(digest)
 
-                const token = pki.privateKeyFromPem(user.privateKey).decrypt(util.decode64(encryptedToken))
+                setEncryptionDigest(digest)
+                useAuthStore.persist.rehydrate()
+                useChatsStore.persist.rehydrate()
+
+                const hydratedUser = useAuthStore.getState().user
+
+                if (!hydratedUser?.privateKey) {
+                    throw new Error("No private key found in stored data")
+                }
+
+                const token = pki.privateKeyFromPem(hydratedUser.privateKey).decrypt(util.decode64(encryptedToken))
 
                 await new Promise<void>((resolve) => {
                     setTimeout(() => {
-                        setUser({
+                        useAuthStore.getState().setUser({
                             // @ts-ignore - defaultSettings for retrocompatibility for users who didn't have settings in previous versions
                             settings: defaultSettings,
-                            ...user,
+                            ...hydratedUser,
                             token,
                             refreshToken
                         })
-                        setChats(chats)
 
                         navigate("/")
                         toast.dismiss()

@@ -1,13 +1,13 @@
-import { userState } from "atoms/user";
-import { chatsState, defaultChats } from "atoms/chats";
-import { dialogState } from "atoms/dialog";
+import { defaultChats } from "atoms/chats";
 import { USER_DIGEST } from "constants/localStorage";
 import { pki, util } from "node-forge";
 import { useRef } from "react";
 import { Form } from "react-bootstrap";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
-import { useSetRecoilState } from "recoil";
+import { useAuthStore } from "stores/auth";
+import { useChatsStore } from "stores/chats";
+import { useUIStore } from "stores/ui";
 import decryptLocalStorage from "util/decryptLocalStorage";
 import generateKeyPair from "util/generateKeypair";
 import withHysteresis from "util/withHysteresis";
@@ -18,9 +18,9 @@ export default function useHandleMnemonicSubmit(mnemonic: React.MutableRefObject
 
     const handleDigestUpdate = useHandleDigestUpdate()
 
-    const setUser = useSetRecoilState(userState)
-    const setChats = useSetRecoilState(chatsState)
-    const setDialog = useSetRecoilState(dialogState)
+    const setUser = useAuthStore(state => state.setUser)
+    const setChats = useChatsStore(state => state.setChats)
+    const setDialog = useUIStore(state => state.setDialog)
 
     const navigate = useNavigate()
 
@@ -71,7 +71,7 @@ export default function useHandleMnemonicSubmit(mnemonic: React.MutableRefObject
 
                 // From now we can safely assume that the keys for user {nick} were generated using the same mnemonic
 
-                // However, _before_ setting recoil let's first make sure there wasn't a previous user logged in 
+                // However, _before_ setting state let's first make sure there wasn't a previous user logged in
                 // That is to give chance to the current user to NOT delete the previous user data inadvertently
 
                 if (oldDigestEncrypted) try {
@@ -109,7 +109,7 @@ export default function useHandleMnemonicSubmit(mnemonic: React.MutableRefObject
 
                         const { token, refreshToken, digest } = await handleDigestUpdate(user, newPassword.current)
 
-                        // login with new digest 
+                        // login with new digest
                         setUser({
                             ...user,
                             digest,

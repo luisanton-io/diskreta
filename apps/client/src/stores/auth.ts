@@ -7,6 +7,7 @@ interface AuthState {
     user: LoggedUser | null
     setUser: (user: LoggedUser | null) => void
     updateToken: (token: string) => void
+    updateTokens: (token: string, refreshToken: string) => void
     updateSettings: (settings: Partial<Settings>) => void
     hydrate: () => void
 }
@@ -26,6 +27,13 @@ export const useAuthStore = create<AuthState>()(
                 const user = get().user
                 if (user) {
                     set({ user: { ...user, token } })
+                }
+            },
+
+            updateTokens: (token, refreshToken) => {
+                const user = get().user
+                if (user) {
+                    set({ user: { ...user, token, refreshToken } })
                 }
             },
 

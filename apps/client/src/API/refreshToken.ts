@@ -1,11 +1,10 @@
 import API from "API";
-import { userState } from "atoms/user";
+import { useAuthStore } from "stores/auth";
 import { pki, util } from "node-forge";
-import { getRecoil, setRecoil } from "recoil-nexus";
 
 const refreshToken = async () => {
     try {
-        const user = getRecoil(userState);
+        const user = useAuthStore.getState().user;
 
         if (!user) throw new Error()
 
@@ -15,11 +14,10 @@ const refreshToken = async () => {
 
         const privateKey = pki.privateKeyFromPem(user.privateKey)
 
-        setRecoil(userState, user => user && ({
-            ...user,
-            token: privateKey.decrypt(util.decode64(data.token)),
-            refreshToken: data.refreshToken
-        }))
+        useAuthStore.getState().updateTokens(
+            privateKey.decrypt(util.decode64(data.token)),
+            data.refreshToken
+        )
     } catch (e) {
         console.error(e);
         window.location.assign("/login")

@@ -1,17 +1,15 @@
 import API from "API";
-import { dialogState } from "atoms/dialog";
 import { USER_DIGEST } from "constants/localStorage";
 import { useRef } from "react";
 import { Form } from "react-bootstrap";
 import { toast } from "react-toastify";
-import { useSetRecoilState } from "recoil";
+import { useUIStore } from "stores/ui";
 import withHysteresis from "util/withHysteresis";
 import useHandleMnemonicSubmit from "./useHandleMnemonicSubmit";
 
 export default function useHandleRecovery(nick: string, password: string) {
 
-
-    const setDialog = useSetRecoilState(dialogState)
+    const setDialog = useUIStore(state => state.setDialog)
 
     const mnemonic = useRef("")
 

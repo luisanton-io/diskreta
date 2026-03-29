@@ -7,6 +7,10 @@
 - Environment variables use VITE_* prefix, accessed via import.meta.env.VITE_*
 - Vite 6.x used (not 8.x) due to Node 20.10 on this machine; Vite 8 requires Node 20.19+
 - Dev server runs on port 3000 with proxy to backend at localhost:5001
+- Vite resolve aliases must be added for each src/ subdirectory (e.g. `stores: path.resolve(__dirname, "src/stores")`) — tsconfig baseUrl alone doesn't work for Vite
+- Use `useAuthStore.getState()` for non-React contexts (API interceptors, refreshToken); use `useAuthStore(state => state.xxx)` inside React components/hooks
+- Zustand stores use `skipHydration: true` for encrypted persistence — call `setEncryptionDigest(digest)` then `store.persist.rehydrate()` after login
+- Zustand stores are in src/stores/ (auth.ts, chats.ts, ui.ts); encrypted middleware in src/stores/middleware/encrypted-storage.ts
 
 # Ralph Progress Log
 Started: Sun Mar 29 19:17:31 CEST 2026
@@ -39,4 +43,34 @@ Started: Sun Mar 29 19:17:31 CEST 2026
   - Dark mode uses `@custom-variant dark (&:is(.dark *))` in Tailwind v4
   - shadcn CLI (`pnpm dlx shadcn@latest add <component> --yes`) auto-installs component deps like radix-ui
   - Old styles (Bootstrap/SCSS) coexist fine alongside Tailwind — no conflicts
+---
+
+## 2026-03-29 - US-003
+- Set up Zustand stores to replace Recoil atoms
+- Files created:
+  - src/stores/middleware/encrypted-storage.ts — AES encrypted localStorage using crypto-js, replicating atoms/effects/persist.ts but with a module-level digest variable instead of recoil-nexus getRecoil
+  - src/stores/auth.ts — LoggedUser state with token update, settings update, and encrypted persistence (skipHydration: true)
+  - src/stores/chats.ts — Chat records with message update, typing, delete methods, encrypted persistence (skipHydration: true)
+  - src/stores/ui.ts — Combined theme, dialog, focus, timestamp, replyingTo, sessionTimeout (no persistence)
+- **Learnings for future iterations:**
+  - Zustand persist with `skipHydration: true` solves the bootstrap problem: stores start empty, then `hydrate()` is called after login when the digest is available
+  - `setEncryptionDigest()` must be called before `hydrate()` and before any persistence writes — the auth store's `setUser` does this automatically
+  - The encrypted-storage middleware uses a module-level `_digest` variable instead of recoil-nexus, making it framework-agnostic
+  - Recoil and Zustand coexist without conflicts — no need to remove Recoil yet
+---
+
+## 2026-03-29 - US-004a
+- Rewired API layer and auth hooks from Recoil to Zustand
+- Files changed:
+  - Modified: src/API/index.ts (getRecoil → useAuthStore.getState()), src/API/refreshToken.ts (getRecoil/setRecoil → useAuthStore.getState()), src/hooks/usePrivateKey.ts (useRecoilValue → useAuthStore), src/components/FocusHandler.tsx (Recoil atoms → useUIStore)
+  - Modified: src/pages/Login/handlers/useHandleSubmit.tsx (Recoil → Zustand stores + encrypted persistence rehydration), src/pages/Login/handlers/useHandleRecovery.tsx (dialogState → useUIStore), src/pages/Login/handlers/useHandleMnemonicSubmit.tsx (3 Recoil atoms → 3 Zustand stores), src/pages/Login/handlers/useHandleRegenerate.tsx (3 Recoil atoms → 3 Zustand stores)
+  - Modified: src/pages/Register/index.tsx (useSetRecoilState → useAuthStore + useUIStore)
+  - Modified: src/stores/auth.ts (added updateTokens method for refreshToken flow)
+  - Modified: vite.config.ts (added stores alias)
+- **Learnings for future iterations:**
+  - Vite resolve.alias must include `stores` directory — it was missing after US-003 created the stores
+  - For non-React code (API interceptors, standalone functions), use `useAuthStore.getState()` instead of hooks
+  - Login flow with Zustand: call `setEncryptionDigest(digest)` → `useAuthStore.persist.rehydrate()` → read hydrated state
+  - `useHandleDigestUpdate` was already a pure function (no Recoil hooks), so it needed no changes
+  - Recoil atoms and imports still exist but are no longer used by the API layer, auth hooks, login, register, or FocusHandler
 ---

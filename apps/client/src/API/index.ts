@@ -1,13 +1,12 @@
-import { userState } from "atoms/user";
+import { useAuthStore } from "stores/auth";
 import axios from "axios";
-import { getRecoil } from "recoil-nexus";
 import { refreshToken } from "./refreshToken";
 
 const API = axios.create({ baseURL: (import.meta.env.VITE_BE_DOMAIN || "") + "/api" });
 
 API.interceptors.request.use(
     async (config) => {
-        const accessToken = getRecoil(userState)?.token;
+        const accessToken = useAuthStore.getState().user?.token;
 
         config.headers = {
             Authorization: accessToken ? `Bearer ${accessToken}` : '',

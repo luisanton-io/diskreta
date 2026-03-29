@@ -1,6 +1,3 @@
-import { chatsState, defaultChats } from "atoms/chats"
-import { dialogState } from "atoms/dialog"
-import { userState } from "atoms/user"
 import { defaultSettings } from "constants/defaultSettings"
 import { USER_DIGEST } from "constants/localStorage"
 import { pki, util } from "node-forge"
@@ -8,16 +5,18 @@ import { useRef } from "react"
 import { Form } from "react-bootstrap"
 import { useNavigate } from "react-router-dom"
 import { toast } from "react-toastify"
-import { useSetRecoilState } from "recoil"
+import { useAuthStore } from "stores/auth"
+import { useChatsStore } from "stores/chats"
+import { useUIStore } from "stores/ui"
 import { createSignedDigest } from "util/createDigest"
 import generateKeyPair from "util/generateKeypair"
 
 export default function useHandleRegenerate(nick: string, password: string) {
     const mnemonic = useRef("")
 
-    const setUser = useSetRecoilState(userState)
-    const setChats = useSetRecoilState(chatsState)
-    const setDialog = useSetRecoilState(dialogState)
+    const setUser = useAuthStore(state => state.setUser)
+    const setChats = useChatsStore(state => state.setChats)
+    const setDialog = useUIStore(state => state.setDialog)
 
     const navigate = useNavigate()
 
@@ -38,21 +37,21 @@ export default function useHandleRegenerate(nick: string, password: string) {
                 setTimeout(async () => {
                     const { privateKey } = await generateKeyPair(mnemonic.current)
 
-                    setUser(() => {
-                        const userWithoutDigest: Omit<LoggedUser, 'digest'> = {
-                            ...responseUser,
-                            token: privateKey.decrypt(util.decode64(encryptedToken)),
-                            refreshToken,
-                            privateKey: pki.privateKeyToPem(privateKey),
-                            settings: defaultSettings
-                        }
+                    const userWithoutDigest: Omit<LoggedUser, 'digest'> = {
+                        ...responseUser,
+                        token: privateKey.decrypt(util.decode64(encryptedToken)),
+                        refreshToken,
+                        privateKey: pki.privateKeyToPem(privateKey),
+                        settings: defaultSettings
+                    }
 
-                        return {
-                            ...userWithoutDigest,
-                            digest: createSignedDigest(userWithoutDigest, password).digest // as side effect, saves encrypted digest to localStorage
-                        }
-                    })
-                    setChats(defaultChats)
+                    const newUser: LoggedUser = {
+                        ...userWithoutDigest,
+                        digest: createSignedDigest(userWithoutDigest, password).digest
+                    }
+
+                    setUser(newUser)
+                    setChats({})
                     setDialog(null)
                     navigate("/")
 

@@ -1,7 +1,5 @@
 import API from "API";
 import { AxiosError } from "axios"
-import { dialogState } from "atoms/dialog";
-import { userState } from "atoms/user";
 import { generateMnemonic } from "bip39";
 import Diskreta from "components/Diskreta";
 import { USER_DIGEST } from "constants/localStorage";
@@ -11,7 +9,8 @@ import { Button, Col, Container, Form, InputGroup, Row } from "react-bootstrap";
 import { Eye, EyeSlash } from "react-bootstrap-icons";
 import { Link, useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
-import { useSetRecoilState } from "recoil";
+import { useAuthStore } from "stores/auth";
+import { useUIStore } from "stores/ui";
 import { createDigest } from "util/createDigest";
 import generateKeyPair from "util/generateKeypair";
 import SeedDialog from "./SeedDialog";
@@ -22,8 +21,8 @@ export default function Register() {
 
     const navigate = useNavigate()
 
-    const setUser = useSetRecoilState(userState)
-    const setDialog = useSetRecoilState(dialogState)
+    const setUser = useAuthStore(state => state.setUser)
+    const setDialog = useUIStore(state => state.setDialog)
 
     const [nick, setNick] = useState('')
     const [password, setPassword] = useState('')
@@ -86,8 +85,6 @@ export default function Register() {
         const encryptedDigest = util.encode64(publicKey.encrypt(digest))
 
         localStorage.setItem(USER_DIGEST, encryptedDigest)
-
-        // console.table({ encryptedDigest, digest, eq: privateKey.decrypt(util.decode64(encryptedDigest)) === digest })
 
         try {
             const { data: {

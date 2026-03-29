@@ -58,7 +58,7 @@
         "Typecheck passes"
       ],
       "priority": 3,
-      "passes": false,
+      "passes": true,
       "notes": "The persistence must handle the bootstrap problem: on app load the digest is not available until login, so the store initializes empty and hydrates after authentication."
     },
     {
@@ -76,7 +76,7 @@
         "Typecheck passes"
       ],
       "priority": 4,
-      "passes": false,
+      "passes": true,
       "notes": ""
     },
     {
