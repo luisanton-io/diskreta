@@ -13,6 +13,7 @@ export default defineConfig({
   ],
   resolve: {
     alias: {
+      "@": path.resolve(__dirname, "src"),
       API: path.resolve(__dirname, "src/API"),
       atoms: path.resolve(__dirname, "src/atoms"),
       components: path.resolve(__dirname, "src/components"),

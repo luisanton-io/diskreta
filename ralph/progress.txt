@@ -1,0 +1,42 @@
+## Codebase Patterns
+- Client uses baseUrl: "./src" in tsconfig.json for path aliases (import from "API", "hooks", "pages", etc.)
+- @tailwindcss/vite ESM-only plugin fails with Vite 6 CJS mode — use @tailwindcss/postcss instead
+- shadcn/ui path aliases use @/ prefix (e.g. @/components, @/lib) mapped in both tsconfig paths and vite resolve.alias
+- Use `pnpm dlx shadcn@latest add <component> --yes` to add shadcn components
+- Vite config mirrors these aliases via resolve.alias in vite.config.ts
+- Environment variables use VITE_* prefix, accessed via import.meta.env.VITE_*
+- Vite 6.x used (not 8.x) due to Node 20.10 on this machine; Vite 8 requires Node 20.19+
+- Dev server runs on port 3000 with proxy to backend at localhost:5001
+
+# Ralph Progress Log
+Started: Sun Mar 29 19:17:31 CEST 2026
+---
+
+## 2026-03-29 - US-001
+- Migrated from CRA (react-app-rewired) to Vite
+- Files changed:
+  - Removed: config-overrides.js, src/react-app-env.d.ts, src/reportWebVitals.ts, src/setupTests.ts, public/index.html
+  - Created: vite.config.ts, vite-env.d.ts, index.html (at app root)
+  - Modified: package.json (scripts, deps), tsconfig.json (ES2022, bundler moduleResolution), src/API/index.ts, src/hooks/useSocket.ts (REACT_APP_* -> VITE_*), src/index.tsx (removed reportWebVitals), .gitignore
+- Removed deps: react-app-rewired, react-scripts, react-error-overlay, buffer, process, stream-browserify
+- Added deps: vite@6, @vitejs/plugin-react@4, vite-plugin-node-polyfills, typescript@5.7, @types/node@22
+- **Learnings for future iterations:**
+  - Vite 8 needs Node 20.19+ — this machine has 20.10, so Vite 6 was used instead
+  - vite-plugin-node-polyfills handles Buffer/stream/process polyfills that config-overrides.js used to provide
+  - The CJS deprecation warning from Vite is harmless and can be ignored
+  - Typecheck passes, dev server starts on port 3000
+---
+
+## 2026-03-29 - US-002
+- Set up Tailwind CSS v4 + shadcn/ui in the client app
+- Files changed:
+  - Created: src/styles/globals.css (Tailwind directives + shadcn CSS variables for light/dark), postcss.config.js, components.json, src/lib/utils.ts (cn() helper), src/components/ui/button.tsx (shadcn Button)
+  - Modified: vite.config.ts (added @/ alias), tsconfig.json (added paths for @/*), src/index.tsx (import globals.css), package.json (new deps)
+- Added deps: tailwindcss, @tailwindcss/postcss, class-variance-authority, clsx, tailwind-merge, lucide-react, radix-ui (via shadcn)
+- **Learnings for future iterations:**
+  - @tailwindcss/vite is ESM-only and doesn't work with Vite 6 CJS loading — must use @tailwindcss/postcss instead
+  - Tailwind v4 uses `@import "tailwindcss"` instead of v3's `@tailwind base/components/utilities`
+  - Dark mode uses `@custom-variant dark (&:is(.dark *))` in Tailwind v4
+  - shadcn CLI (`pnpm dlx shadcn@latest add <component> --yes`) auto-installs component deps like radix-ui
+  - Old styles (Bootstrap/SCSS) coexist fine alongside Tailwind — no conflicts
+---
