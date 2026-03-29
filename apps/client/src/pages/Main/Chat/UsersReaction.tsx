@@ -1,6 +1,5 @@
-import { userState } from "atoms/user"
 import { DialogClose } from "components/Dialog"
-import { useRecoilValue } from "recoil"
+import { useAuthStore } from "stores/auth"
 import { reactions } from "./Message"
 
 interface Props {
@@ -10,7 +9,7 @@ interface Props {
 
 export default function UsersReaction({ message, recipients }: Props) {
 
-    const user = useRecoilValue(userState)
+    const user = useAuthStore(s => s.user)
 
     return <div id="users-reaction">
         <h5 className="mt-4 text-start">Reactions</h5>

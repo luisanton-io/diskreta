@@ -1,13 +1,13 @@
 import { Done } from "@mui/icons-material";
-import { themeState } from "atoms/theme";
 import cn from "classnames";
 import { ListGroup } from "react-bootstrap";
-import { useRecoilState } from "recoil";
+import { useAuthStore } from "stores/auth";
 import Section from ".";
 import { Themes } from "constants/themes";
 
 export default function Theme() {
-    const [currentTheme, setCurrentTheme] = useRecoilState(themeState)
+    const currentTheme = useAuthStore(s => s.user?.settings.theme ?? 'Default')
+    const updateSettings = useAuthStore(s => s.updateSettings)
 
     return <Section title="Theme">
         <ListGroup>
@@ -16,7 +16,7 @@ export default function Theme() {
                     <ListGroup.Item
                         className={cn("rounded-0 mb-2 border bg-transparent cursor-pointer", currentTheme === theme ? "border-warning text-warning" : "border-light text-white")}
                         key={theme}
-                        onClick={() => setCurrentTheme(theme)}>
+                        onClick={() => updateSettings({ theme })}>
                         {currentTheme === theme && (
                             <Done className="position-absolute start-0 mx-2" style={{
                                 fontSize: '1.25em',

@@ -1,38 +1,19 @@
-// import { AES, enc, SHA512 } from 'crypto-js';
 import { pki } from 'node-forge';
 import { Route, Routes } from 'react-router-dom';
 import { ToastContainer } from 'react-toastify';
-import { useRecoilCallback, useRecoilValue } from 'recoil';
-import RecoilNexus from 'recoil-nexus';
 import Dialog from './components/Dialog';
 import Login from './pages/Login';
 import Main from './pages/Main';
 import Register from './pages/Register';
 // import 'bootstrap/dist/css/bootstrap.min.css';
-import { themeState } from 'atoms/theme';
-import { userState } from 'atoms/user';
 import FocusHandler from 'components/FocusHandler';
 import { useEffect } from 'react';
 import 'react-toastify/dist/ReactToastify.css';
+import { useAuthStore } from 'stores/auth';
 import './styles/index.scss';
 
-// (window as any).AES = AES;
-// (window as any).pki = pki;
-// (window as any).enc = enc;
-// (window as any).SHA512 = SHA512;
-// (window as any).md = md;
-
 const Debug = () => {
-  const print = useRecoilCallback(({ snapshot }) => async () => {
-    console.debug('Atom values:');
-    for (const node of snapshot.getNodes_UNSTABLE()) {
-      const value = await snapshot.getPromise(node);
-      console.debug(node.key, value);
-    }
-  }, []);
-
-  const user = useRecoilValue(userState)
-
+  const user = useAuthStore(s => s.user)
   const publicKey = user?.publicKey
 
   useEffect(() => {
@@ -41,20 +22,18 @@ const Debug = () => {
     )
   }, [publicKey]);
 
-  (window as any).printRecoil = print
   return null
 }
 
 function App() {
 
-  const theme = useRecoilValue(themeState)
+  const theme = useAuthStore(s => s.user?.settings.theme ?? 'Default')
 
   useEffect(() => {
     document.querySelector("body")?.setAttribute("data-theme", theme)
   }, [theme])
 
   return (<>
-    <RecoilNexus />
     <FocusHandler />
     <Routes>
       <Route path="/login" element={<Login />} />

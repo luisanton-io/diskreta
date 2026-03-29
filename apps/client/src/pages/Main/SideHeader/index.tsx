@@ -1,14 +1,13 @@
-import { dialogState } from "atoms/dialog";
 import { Button } from "react-bootstrap";
 import { Plus } from "react-bootstrap-icons";
-import { useSetRecoilState } from "recoil";
+import { useUIStore } from "stores/ui";
 import SearchDialog from "./SearchDialog";
 import Settings from "../Settings";
 
 
 export default function SideHeader() {
 
-    const setDialog = useSetRecoilState(dialogState)
+    const setDialog = useUIStore(s => s.setDialog)
 
     const handleShowSearchDialog = () => {
         setDialog({

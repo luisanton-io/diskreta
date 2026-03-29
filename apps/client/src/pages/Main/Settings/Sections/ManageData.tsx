@@ -1,5 +1,4 @@
 import API from "API";
-import { dialogState } from "atoms/dialog";
 import { AxiosError } from "axios";
 import { CHATS, USER, USER_DIGEST } from "constants/localStorage";
 import copy from "copy-to-clipboard";
@@ -8,7 +7,7 @@ import { Button, ListGroup, ListGroupItem } from "react-bootstrap";
 import { Download, Trash, Upload } from "react-bootstrap-icons";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
-import { useSetRecoilState } from "recoil";
+import { useUIStore } from "stores/ui";
 import Section from ".";
 
 const STORAGE_KEYS = [CHATS, USER, USER_DIGEST]
@@ -16,7 +15,7 @@ const STORAGE_KEYS = [CHATS, USER, USER_DIGEST]
 export default function ManageData() {
 
     const navigate = useNavigate()
-    const setDialog = useSetRecoilState(dialogState)
+    const setDialog = useUIStore(s => s.setDialog)
 
     const handleRemoveData = async () => {
         if (!window.confirm("You are about to remove ALL your account data. You will NEVER be able to recover your data. Are you sure to continue?")) {
@@ -80,19 +79,6 @@ export default function ManageData() {
 
         alert("Data copied to clipboard. This data is military grade encrypted and can only be decrypted using Diskreta in another device, using your recovery phrase to regenerate your keys.")
     }
-
-    //     return <Dropdown.Menu style={{ backdropFilter: "blur(8px)", backgroundColor: 'rgba(16,16,16,0.50)' }}>
-    //     <Dropdown.Header>Data</Dropdown.Header>
-    //     <Dropdown.Item className="bg-transparent text-white" onClick={handleImportData}>
-    //         Import
-    //     </Dropdown.Item>
-    //     <Dropdown.Item className="bg-transparent text-white" onClick={handleExportData}>
-    //         Export
-    //     </Dropdown.Item>
-    //     <Dropdown.Divider />
-    //     <Dropdown.Item className="bg-transparent text-white" onClick={handleRemoveData}>Delete</Dropdown.Item>
-    // </Dropdown.Menu>
-    // </Dropdown>
 
     return <Section title="Manage Data">
         <ListGroup className="bg-transparent text-white">

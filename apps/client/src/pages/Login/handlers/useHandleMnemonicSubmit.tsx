@@ -1,4 +1,3 @@
-import { defaultChats } from "atoms/chats";
 import { USER_DIGEST } from "constants/localStorage";
 import { pki, util } from "node-forge";
 import { useRef } from "react";
@@ -95,7 +94,7 @@ export default function useHandleMnemonicSubmit(mnemonic: React.MutableRefObject
                         privateKey: pki.privateKeyToPem(privateKey),
                         settings: defaultSettings
                     },
-                    chats: defaultChats
+                    chats: {}
                 }
 
             })

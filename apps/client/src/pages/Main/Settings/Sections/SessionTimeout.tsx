@@ -1,10 +1,10 @@
-import { sessionTimeoutState } from "atoms/sessionTimeout";
-import { useRecoilState } from "recoil";
+import { useAuthStore } from "stores/auth";
 import Section from ".";
 
 export default function SessionTimeout() {
 
-    const [sessionTimeout, setSessionTimeout] = useRecoilState(sessionTimeoutState)
+    const sessionTimeout = useAuthStore(s => s.user?.settings.sessionTimeout ?? 15)
+    const updateSettings = useAuthStore(s => s.updateSettings)
 
     return <Section title="Session Timeout">
         <p>Time in seconds for the application to log you out when inactive.</p>
@@ -12,7 +12,7 @@ export default function SessionTimeout() {
         <select
             className="form-control bg-transparent rounded-0 border text-white"
             defaultValue={sessionTimeout}
-            onChange={e => { setSessionTimeout(parseInt(e.target.value)) }}
+            onChange={e => { updateSettings({ sessionTimeout: parseInt(e.target.value) }) }}
         >
             <option value="15">15 seconds</option>
             <option value="60">1 minute</option>

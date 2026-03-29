@@ -1,7 +1,6 @@
-import { focusState } from "atoms/focus"
-import { userState } from "atoms/user"
 import { Fragment, useContext, useEffect, useRef } from "react"
-import { useRecoilValue } from "recoil"
+import { useAuthStore } from "stores/auth"
+import { useUIStore } from "stores/ui"
 import { ChatContext } from "./context/ChatCtx"
 import useMessageStatus from "../handlers/useMessageStatus"
 import Message from "./Message"
@@ -9,8 +8,8 @@ import FloatingDate from "./FloatingDate"
 import ScrollToBottom from "./ScrollToBottom"
 
 export default function ChatBody() {
-    const hasFocus = useRecoilValue(focusState)
-    const user = useRecoilValue(userState)
+    const hasFocus = useUIStore(s => s.focus)
+    const user = useAuthStore(s => s.user)
 
     const handleMessageStatus = useMessageStatus()
 

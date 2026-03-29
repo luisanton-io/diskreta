@@ -4,7 +4,6 @@ import './index.css';
 import './styles/globals.css';
 import App from './App';
 import { BrowserRouter } from 'react-router-dom';
-import { RecoilRoot } from 'recoil';
 
 const root = ReactDOM.createRoot(
   document.getElementById('root') as HTMLElement
@@ -12,9 +11,7 @@ const root = ReactDOM.createRoot(
 root.render(
   // <React.StrictMode>
   <BrowserRouter>
-    <RecoilRoot>
-      <App />
-    </RecoilRoot>
+    <App />
   </BrowserRouter>
   // </React.StrictMode>
 );

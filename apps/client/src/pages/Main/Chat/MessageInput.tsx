@@ -1,8 +1,5 @@
 import { Close } from "@mui/icons-material";
 import { refreshToken } from "API/refreshToken";
-import { chatsState } from "atoms/chats";
-import { replyingToState } from "atoms/replyingTo";
-import { userState } from "atoms/user";
 import imageCompression from 'browser-image-compression';
 import { MEDIA_PLACEHOLDER } from "constants/mediaPlaceholder";
 import { AES, SHA256 } from "crypto-js";
@@ -12,7 +9,9 @@ import { useContext, useEffect, useRef, useState } from "react";
 import { Button, Form } from "react-bootstrap";
 import { Camera, Send } from "react-bootstrap-icons";
 import { toast } from "react-toastify";
-import { useRecoilState, useRecoilValue, useSetRecoilState } from "recoil";
+import { useAuthStore } from "stores/auth";
+import { useChatsStore } from "stores/chats";
+import { useUIStore } from "stores/ui";
 import { Socket } from "socket.io-client";
 import convertFileToBase64 from "util/convertFileToBase64";
 import maskUser from "util/maskUser";
@@ -23,8 +22,7 @@ import Typing from "./Typing";
 
 export default function MessageInput() {
 
-    const setChats = useSetRecoilState(chatsState)
-    const user = useRecoilValue(userState)
+    const user = useAuthStore(s => s.user)
 
     const handleMessageStatus = useMessageStatus()
 
@@ -81,8 +79,9 @@ export default function MessageInput() {
             }), {})
         }
 
-        setChats(chats => ({
-            ...chats,
+        const currentChats = useChatsStore.getState().chats
+        useChatsStore.getState().setChats({
+            ...currentChats,
             [activeChat.id]: {
                 ...activeChat,
                 messages: [
@@ -94,7 +93,7 @@ export default function MessageInput() {
                     [sentMessage.hash]: activeChat.messages.length
                 }
             }
-        }))
+        })
 
         for (const recipient of recipients) {
 
@@ -217,7 +216,8 @@ export default function MessageInput() {
         }))
     }, [media, setSpotlight])
 
-    const [replyingTo, setReplyingTo] = useRecoilState(replyingToState)
+    const replyingTo = useUIStore(s => s.replyingTo)
+    const setReplyingTo = useUIStore(s => s.setReplyingTo)
 
     useEffect(() => {
         setReplyingTo(undefined)

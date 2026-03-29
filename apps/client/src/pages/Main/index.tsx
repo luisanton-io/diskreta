@@ -1,12 +1,11 @@
 import { refreshToken } from "API/refreshToken";
-import { focusState } from "atoms/focus";
-import { userState } from "atoms/user";
 import { USER_DIGEST } from "constants/localStorage";
 import useActiveChat from "hooks/useActiveChat";
 import { useEffect } from "react";
 import { Col, Container, Row } from "react-bootstrap";
 import { useNavigate } from "react-router-dom";
-import { useRecoilValue } from "recoil";
+import { useAuthStore } from "stores/auth";
+import { useUIStore } from "stores/ui";
 import { isTokenExpired } from "util/isTokenExpired";
 import Chat from "./Chat";
 import Conversations from "./Conversations";
@@ -16,8 +15,8 @@ export default function Main() {
 
     const navigate = useNavigate()
 
-    const user = useRecoilValue(userState)
-    const hasFocus = useRecoilValue(focusState)
+    const user = useAuthStore(s => s.user)
+    const hasFocus = useUIStore(s => s.focus)
 
     const { activeChatId } = useActiveChat()
     const { token } = user || {}

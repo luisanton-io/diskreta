@@ -2,9 +2,6 @@ import { Reply } from '@mui/icons-material';
 import outgoing from '@mui/icons-material/AccessTime';
 import sent from '@mui/icons-material/Done';
 import delivered from '@mui/icons-material/DoneAll';
-import { dialogState } from 'atoms/dialog';
-import { replyingToState } from 'atoms/replyingTo';
-import { userState } from 'atoms/user';
 import { MEDIA_PLACEHOLDER } from 'constants/mediaPlaceholder';
 import useDisplayTimestamp from "hooks/useDisplayTimestamp";
 import useLongPress from 'hooks/useLongPress';
@@ -12,7 +9,8 @@ import useSwipe from 'hooks/useSwipe';
 import useUpdateMessage from 'hooks/useUpdateMessage';
 import React, { CSSProperties, useContext, useEffect } from 'react';
 import { EmojiSmile } from 'react-bootstrap-icons';
-import { useRecoilValue, useSetRecoilState } from 'recoil';
+import { useAuthStore } from 'stores/auth';
+import { useUIStore } from 'stores/ui';
 import { isMessageSent } from 'util/isMessageSent';
 import UsersReaction from './UsersReaction';
 import { ChatContext } from './context/ChatCtx';
@@ -54,7 +52,7 @@ export default function Message({ message, sent, i }: Props) {
 
     // console.table({ deltaX, translateX, transform })
 
-    const setReplyingTo = useSetRecoilState(replyingToState)
+    const setReplyingTo = useUIStore(s => s.setReplyingTo)
 
     useEffect(() => {
         if (triggerReply) {
@@ -82,7 +80,7 @@ export default function Message({ message, sent, i }: Props) {
         longPressed && document.querySelector(`#${id}`)!.scrollIntoView({ behavior: 'smooth', "block": "center" })
     }, [longPressed, id])
 
-    const user = useRecoilValue(userState)
+    const user = useAuthStore(s => s.user)
     const updateMessage = useUpdateMessage()
 
     const handleReaction = (reaction: Reaction) => () => {
@@ -110,19 +108,16 @@ export default function Message({ message, sent, i }: Props) {
         }
     }
 
-    const setDialog = useSetRecoilState(dialogState)
+    const setDialog = useUIStore(s => s.setDialog)
 
     const handleReactionsDialog = (e: React.MouseEvent<HTMLDivElement, MouseEvent>) => {
         // open dialog to display users reactions
         e.stopPropagation()
-        setDialog(dialog => {
-            return {
-                ...(dialog || {}),
-                onConfirm() {
-                    return null
-                },
-                Content: () => <UsersReaction message={message} recipients={recipients} />
-            }
+        setDialog({
+            onConfirm() {
+                return null
+            },
+            Content: () => <UsersReaction message={message} recipients={recipients} />
         })
     }
 

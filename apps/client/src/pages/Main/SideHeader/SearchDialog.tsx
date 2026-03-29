@@ -1,12 +1,11 @@
 import API from "API";
 import { AxiosError } from "axios"
-import { chatsState } from "atoms/chats";
-import { dialogState } from "atoms/dialog";
-import { userState } from "atoms/user";
 import { useEffect, useRef, useState } from "react";
 import { Col, Container, Form, ListGroup, Row, Spinner } from "react-bootstrap";
 import { useNavigate } from "react-router-dom";
-import { useRecoilState, useRecoilValue, useSetRecoilState } from "recoil";
+import { useAuthStore } from "stores/auth";
+import { useChatsStore } from "stores/chats";
+import { useUIStore } from "stores/ui";
 import createChatId from "util/createChatId";
 import maskUser from "util/maskUser";
 import { toast } from "react-toastify";
@@ -14,15 +13,16 @@ import { toast } from "react-toastify";
 export default function SearchDialog() {
     const navigate = useNavigate()
     const [query, setQuery] = useState("")
-    const setDialog = useSetRecoilState(dialogState)
+    const setDialog = useUIStore(s => s.setDialog)
 
     const timeout = useRef<NodeJS.Timeout>()
     const [debouncedQuery, setDebouncedQuery] = useState("")
 
     const [users, setUsers] = useState<User[]>([])
 
-    const user = useRecoilValue(userState)
-    const [chats, setChats] = useRecoilState(chatsState)
+    const user = useAuthStore(s => s.user)
+    const chats = useChatsStore(s => s.chats)
+    const setChats = useChatsStore(s => s.setChats)
 
     const [loading, setLoading] = useState(false)
 
@@ -68,16 +68,17 @@ export default function SearchDialog() {
 
         if (!exists) {
             const publicUser = maskUser(user)
+            const currentChats = useChatsStore.getState().chats
 
-            setChats(chats => ({
-                ...chats,
+            setChats({
+                ...currentChats,
                 [chatId]: {
                     id: chatId,
                     messages: [],
                     members: [publicUser!, selectedUser],
                     indexing: {}
                 }
-            }))
+            })
         }
 
         navigate("/" + chatId)

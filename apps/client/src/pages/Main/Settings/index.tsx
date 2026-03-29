@@ -1,7 +1,6 @@
-import { dialogState } from "atoms/dialog";
 import { DialogClose } from "components/Dialog";
 import { GearWideConnected } from "react-bootstrap-icons";
-import { useSetRecoilState } from "recoil";
+import { useUIStore } from "stores/ui";
 import ManageData from "./Sections/ManageData";
 import SessionTimeout from "./Sections/SessionTimeout";
 import Theme from "./Sections/Theme";
@@ -16,7 +15,7 @@ function SettingsDialogContent() {
 }
 
 export default function Settings() {
-    const setDialog = useSetRecoilState(dialogState)
+    const setDialog = useUIStore(s => s.setDialog)
 
     const openDialog = () => {
         setDialog({
