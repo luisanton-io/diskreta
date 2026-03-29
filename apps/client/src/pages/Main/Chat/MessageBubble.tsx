@@ -1,8 +1,29 @@
 import { cn } from "@/lib/utils"
+import { Clock, Check, CheckCheck } from "lucide-react"
+import { isMessageSent } from "util/isMessageSent"
 
 interface Props {
   message: SentMessage | ReceivedMessage
   sent: boolean
+}
+
+function StatusIcon({ message }: { message: SentMessage }) {
+  const statusStr = message.status?.[message.to[0]._id]?.split(" ")[0] as
+    | SentMessageStatusWithoutTime
+    | undefined
+
+  switch (statusStr) {
+    case "outgoing":
+      return <Clock className="inline-block h-3 w-3" />
+    case "sent":
+      return <Check className="inline-block h-3 w-3" />
+    case "delivered":
+      return <CheckCheck className="inline-block h-3 w-3" />
+    case "read":
+      return <CheckCheck className="inline-block h-3 w-3 text-blue-500" />
+    default:
+      return null
+  }
 }
 
 export default function MessageBubble({ message, sent }: Props) {
@@ -29,14 +50,17 @@ export default function MessageBubble({ message, sent }: Props) {
         {message.content.media && !message.content.text && (
           <p className="m-0 text-sm">📷 Photo</p>
         )}
-        <p
+        <div
           className={cn(
-            "m-0 mt-1 text-right text-[0.65rem] leading-none",
+            "mt-1 flex items-center justify-end gap-1 text-[0.65rem] leading-none",
             sent ? "text-primary-foreground/70" : "text-muted-foreground"
           )}
         >
-          {messageTime}
-        </p>
+          <span>{messageTime}</span>
+          {sent && isMessageSent(message) && (
+            <StatusIcon message={message} />
+          )}
+        </div>
       </div>
     </div>
   )
