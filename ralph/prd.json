@@ -1,0 +1,471 @@
+{
+  "project": "Diskreta",
+  "branchName": "ralph/client-modernization",
+  "description": "Client Modernization & Push Notifications — Migrate from CRA to Vite, Bootstrap/SCSS to Tailwind + shadcn/ui, Recoil to Zustand, full UI redesign with light/dark/system theme, and add Web Push notifications",
+  "userStories": [
+    {
+      "id": "US-001",
+      "title": "Migrate from CRA to Vite",
+      "description": "As a developer, I want the client app to build and serve with Vite so that development is faster and the webpack/CRA tooling is removed.",
+      "acceptanceCriteria": [
+        "react-app-rewired, react-scripts, and config-overrides.js are removed",
+        "vite and @vitejs/plugin-react are installed",
+        "vite.config.ts is created with dev server on port 3000 and proxy to backend (VITE_BE_DOMAIN)",
+        "public/index.html is moved to index.html at the client app root (Vite convention)",
+        "tsconfig.json is updated: moduleResolution bundler, target ES2022, remove CRA-specific settings",
+        "All REACT_APP_* environment variables are renamed to VITE_* and all references updated throughout the codebase",
+        "vite-plugin-node-polyfills is installed and configured (node-forge and bip39 require Buffer/stream polyfills)",
+        "Package.json scripts updated: dev -> vite, build -> vite build, preview -> vite preview",
+        "pnpm dev --filter=@diskreta/client starts the app without errors",
+        "Existing app renders and is functional (login, register, chat all work)",
+        "Typecheck passes"
+      ],
+      "priority": 1,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-002",
+      "title": "Set up Tailwind CSS + shadcn/ui",
+      "description": "As a developer, I want Tailwind CSS and shadcn/ui configured so that new UI components can be built with them.",
+      "acceptanceCriteria": [
+        "tailwindcss and @tailwindcss/vite are installed",
+        "shadcn/ui is initialized (components.json created, src/lib/utils.ts with cn() helper exists)",
+        "src/styles/globals.css contains Tailwind directives (@import tailwindcss) and shadcn CSS variables for light and dark themes",
+        "The globals.css is imported in the app entry point",
+        "Dark mode works via class strategy (adding dark class to <html>)",
+        "A test shadcn component (e.g. Button) can be added and renders correctly with Tailwind styles",
+        "Old styling dependencies are NOT removed yet (existing UI still works alongside new setup)",
+        "shadcn path aliases (@/components, @/lib) configured in vite.config.ts and tsconfig.json",
+        "Typecheck passes"
+      ],
+      "priority": 2,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-003",
+      "title": "Set up Zustand stores",
+      "description": "As a developer, I want Zustand stores created to replace Recoil atoms so that state management uses a maintained library.",
+      "acceptanceCriteria": [
+        "zustand is installed",
+        "src/stores/auth.ts is created with the same shape as the current userState atom (LoggedUser | null) with getters and setters",
+        "src/stores/chats.ts is created with the same shape as chatsState atom (Record<string, Chat> | null) with methods for updating messages, status, reactions, typing",
+        "src/stores/ui.ts is created combining: theme (light/dark/system), dialog state, focus state, timestamp display state, replyingTo state, sessionTimeout",
+        "Encrypted localStorage persistence middleware is implemented in src/stores/middleware/encrypted-storage.ts replicating the AES encryption from atoms/effects/persist.ts using the user digest as the key",
+        "Auth and chats stores use the encrypted persistence middleware",
+        "Recoil is NOT removed yet (both coexist temporarily)",
+        "Typecheck passes"
+      ],
+      "priority": 3,
+      "passes": false,
+      "notes": "The persistence must handle the bootstrap problem: on app load the digest is not available until login, so the store initializes empty and hydrates after authentication."
+    },
+    {
+      "id": "US-004a",
+      "title": "Rewire API layer and auth hooks to Zustand",
+      "description": "As a developer, I want the API layer and authentication hooks to read/write from Zustand stores instead of Recoil atoms.",
+      "acceptanceCriteria": [
+        "API/index.ts reads token from Zustand auth store instead of Recoil via recoil-nexus",
+        "API/refreshToken.ts updates Zustand auth store",
+        "usePrivateKey.ts reads from Zustand auth store",
+        "All Login page handlers (useHandleSubmit, useHandleRecovery, useHandleMnemonicSubmit, useHandleDigestUpdate, useHandleRegenerate) use Zustand stores",
+        "Register/index.tsx and Login/index.tsx use Zustand auth store",
+        "FocusHandler.tsx uses Zustand UI store for focus and session timeout",
+        "Login and register flows work end-to-end with Zustand",
+        "Typecheck passes"
+      ],
+      "priority": 4,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-004b",
+      "title": "Rewire Socket.IO and message hooks to Zustand",
+      "description": "As a developer, I want the Socket.IO hook and message-related hooks to use Zustand stores instead of Recoil atoms.",
+      "acceptanceCriteria": [
+        "useSocket.ts reads/writes Zustand stores for user, chats, and UI state",
+        "useActiveChat.ts reads from Zustand chats store",
+        "useUpdateMessage.ts updates Zustand chats store",
+        "useDisplayTimestamp.ts uses Zustand UI store",
+        "useArchiveMessage, useMessageStatus, and useHandleDeleteChat handlers use Zustand stores",
+        "Real-time messaging works: send/receive messages, reactions, replies, typing indicators, read receipts all function correctly",
+        "Typecheck passes"
+      ],
+      "priority": 5,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-004c",
+      "title": "Remove Recoil completely",
+      "description": "As a developer, I want Recoil fully removed now that everything uses Zustand.",
+      "acceptanceCriteria": [
+        "recoil, recoil-persist, and recoil-nexus are removed from dependencies",
+        "All files in src/atoms/ are deleted",
+        "RecoilRoot is removed from index.tsx",
+        "No remaining imports of recoil, recoil-nexus, or recoil-persist anywhere in the codebase",
+        "App is fully functional: can register, login, send/receive messages, all features work",
+        "Typecheck passes"
+      ],
+      "priority": 6,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-005",
+      "title": "Redesign login page",
+      "description": "As a user, I want a clean, modern login page so that the app feels polished and trustworthy.",
+      "acceptanceCriteria": [
+        "Login page uses shadcn Card, Input, Button, Label components",
+        "Styled with Tailwind, no Bootstrap or SCSS classes",
+        "Fields: nick, password (with show/hide toggle via lucide Eye/EyeOff icons)",
+        "Login button submits the form",
+        "Recover account link/button triggers the recovery flow (mnemonic entry dialog using shadcn Dialog)",
+        "Create account link navigates to /register",
+        "Error states shown via shadcn toast or inline message",
+        "Responsive: looks good on both mobile and desktop viewports",
+        "Existing login logic (digest creation, API call, token decryption) works unchanged",
+        "Typecheck passes",
+        "Verify in browser"
+      ],
+      "priority": 7,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-006",
+      "title": "Redesign register page",
+      "description": "As a user, I want a clean registration page that clearly presents the mnemonic seed phrase so I understand its importance.",
+      "acceptanceCriteria": [
+        "Register page uses shadcn Card, Input, Button, Label components",
+        "Fields: nick (with availability check on blur), password (with show/hide toggle)",
+        "On submit, shadcn Dialog displays the 24-word mnemonic in a clear grid layout (4 columns x 6 rows)",
+        "Dialog warns user to write down the mnemonic and not screenshot it",
+        "I have saved my seed phrase button confirms and completes registration",
+        "Styled with Tailwind, no Bootstrap or SCSS",
+        "Existing registration logic (keypair generation, digest, API call) works unchanged",
+        "Typecheck passes",
+        "Verify in browser"
+      ],
+      "priority": 8,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-007",
+      "title": "Build layout shell",
+      "description": "As a user, I want a responsive app layout with a sidebar for conversations and a main panel for chat.",
+      "acceptanceCriteria": [
+        "Two-column layout: left sidebar (conversations list) + right main panel (active chat or empty state)",
+        "On desktop (>=768px): both panels visible side by side",
+        "On mobile (<768px): only one panel visible at a time. Conversations list is default, tapping a chat navigates to full-screen chat view, back button returns to conversations",
+        "Sidebar header shows app branding (diskreta.) and action buttons (new chat, settings)",
+        "Empty state in main panel when no chat is selected (e.g. Select a conversation)",
+        "Uses shadcn ScrollArea for scrollable panels",
+        "Styled with Tailwind, no Bootstrap grid or SCSS",
+        "Route structure: / shows conversations, /:activeChatId shows chat (mobile: full-screen, desktop: in main panel)",
+        "Typecheck passes",
+        "Verify in browser"
+      ],
+      "priority": 9,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-008",
+      "title": "Build conversations list",
+      "description": "As a user, I want to see my conversations sorted by most recent so I can quickly find and open chats.",
+      "acceptanceCriteria": [
+        "Lists all chats from Zustand chats store, sorted by latest message timestamp (newest first)",
+        "Each conversation row shows: recipient nick(s), last message preview (or typing... if active), timestamp of last message",
+        "Unread message count shown as a badge on each conversation",
+        "Clicking a conversation navigates to /:chatId",
+        "Active conversation is visually highlighted",
+        "Delete conversation option (hover on desktop, swipe or long-press on mobile) with confirmation dialog",
+        "Uses shadcn Avatar, Badge, ScrollArea components",
+        "Styled with Tailwind",
+        "Typecheck passes",
+        "Verify in browser"
+      ],
+      "priority": 10,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-009",
+      "title": "Build user search dialog",
+      "description": "As a user, I want to search for other users by nickname so I can start new conversations.",
+      "acceptanceCriteria": [
+        "New chat button in sidebar header opens a shadcn Dialog",
+        "Dialog contains a search input with debounced search (existing API: GET /users?nick={query})",
+        "Results shown as a list of user nicks",
+        "Clicking a user creates or navigates to the existing chat with them",
+        "Empty state when no results found",
+        "Styled with Tailwind + shadcn components",
+        "Typecheck passes",
+        "Verify in browser"
+      ],
+      "priority": 11,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-010",
+      "title": "Build chat header",
+      "description": "As a user, I want to see who I'm chatting with and have access to chat actions.",
+      "acceptanceCriteria": [
+        "Shows recipient nick(s) for the active chat",
+        "On mobile: back button (lucide ArrowLeft icon) to return to conversations list",
+        "Dropdown menu (shadcn DropdownMenu) with Delete chat option",
+        "Delete chat shows confirmation dialog (shadcn AlertDialog) before executing",
+        "Styled with Tailwind + shadcn",
+        "Typecheck passes",
+        "Verify in browser"
+      ],
+      "priority": 12,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-011a",
+      "title": "Build message list — core rendering",
+      "description": "As a user, I want to see the message history in a chat with clear visual distinction between sent and received messages.",
+      "acceptanceCriteria": [
+        "Messages rendered in chronological order (oldest at top, newest at bottom)",
+        "Sent messages aligned right with a distinct background color",
+        "Received messages aligned left with a different background color",
+        "Each message shows text content and timestamp (on click for sent messages)",
+        "Sent messages show status icons: clock (outgoing), single check (sent), double check (delivered), blue double check (read) using lucide icons",
+        "Chat auto-scrolls to bottom on new messages (only if already at bottom)",
+        "Emits read-msg for visible received messages (existing read receipt logic)",
+        "Uses shadcn ScrollArea",
+        "Styled with Tailwind",
+        "Typecheck passes",
+        "Verify in browser"
+      ],
+      "priority": 13,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-011b",
+      "title": "Build message list — enhancements",
+      "description": "As a user, I want date separators, scroll-to-bottom, URL linking, and emoji rendering in the message list.",
+      "acceptanceCriteria": [
+        "Date separators between message groups showing Today, Yesterday, or full date",
+        "Scroll-to-bottom floating button (lucide ArrowDown icon) appears when scrolled up, click scrolls to bottom",
+        "URLs in message text are detected and rendered as clickable links (opens in new tab)",
+        "Emoji-only messages (text containing only emoji, no other characters) rendered at larger font size",
+        "Styled with Tailwind",
+        "Typecheck passes",
+        "Verify in browser"
+      ],
+      "priority": 14,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-012a",
+      "title": "Build message input — text and send",
+      "description": "As a user, I want to type and send encrypted text messages.",
+      "acceptanceCriteria": [
+        "Textarea input at bottom of chat, auto-grows with content (max ~5 lines, then scrolls)",
+        "Send button (lucide Send icon) disabled when input is empty",
+        "Enter sends message, Shift+Enter inserts newline",
+        "Emits typing socket event while user is typing (existing debounce logic)",
+        "Existing encryption logic preserved: text encrypted with recipient RSA public key",
+        "Message sent via existing Socket.IO out-msg event with ACK handling",
+        "Styled with Tailwind + shadcn Button",
+        "Typecheck passes",
+        "Verify in browser"
+      ],
+      "priority": 15,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-012b",
+      "title": "Build message input — media attachments",
+      "description": "As a user, I want to send images in chat with automatic compression and encryption.",
+      "acceptanceCriteria": [
+        "Camera/attachment button (lucide Paperclip or Camera icon) triggers file input for image capture/selection",
+        "Selected images are compressed using existing browser-image-compression logic (max 1MB)",
+        "HEIC images are converted to PNG using existing heic2any logic",
+        "Media is encrypted with a random AES key, the key itself RSA-encrypted with recipient public key (existing encryption logic)",
+        "Media preview shown in message input before sending",
+        "Sent media displays as a thumbnail in the message bubble",
+        "Styled with Tailwind",
+        "Typecheck passes",
+        "Verify in browser"
+      ],
+      "priority": 16,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-013",
+      "title": "Build reply-to functionality",
+      "description": "As a user, I want to reply to specific messages so conversations have clear context.",
+      "acceptanceCriteria": [
+        "Swipe right on a message (50px threshold) triggers reply mode (existing useSwipe logic)",
+        "Reply bar appears above the message input showing the quoted message content and sender",
+        "Close button (lucide X icon) on reply bar cancels the reply",
+        "Sent reply includes replyingTo field in the message payload (existing logic)",
+        "Received replies show a quoted block above the message content with left border accent",
+        "Styled with Tailwind",
+        "Typecheck passes",
+        "Verify in browser"
+      ],
+      "priority": 17,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-014",
+      "title": "Build emoji reactions",
+      "description": "As a user, I want to react to messages with emoji.",
+      "acceptanceCriteria": [
+        "Long-press (500ms) on a message shows reaction picker (existing useLongPress logic)",
+        "Reaction options displayed in a row: thumbs-up, heart, laughing, surprised, crying, praying-hands",
+        "Picker shown as shadcn Popover positioned near the message",
+        "Selecting a reaction sends it via existing out-reaction Socket.IO event",
+        "Received reactions displayed as small badges below the message",
+        "Tapping a reaction badge shows a shadcn Dialog listing who reacted with what",
+        "Styled with Tailwind + shadcn",
+        "Typecheck passes",
+        "Verify in browser"
+      ],
+      "priority": 18,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-015",
+      "title": "Build typing indicator",
+      "description": "As a user, I want to see when the other person is typing.",
+      "acceptanceCriteria": [
+        "User is typing... text with animated dots shown at the bottom of the message list",
+        "Triggered by incoming typing Socket.IO event (existing logic)",
+        "Disappears after 500ms of no typing events (existing timeout logic)",
+        "Also shown as preview text in conversations list (typing... instead of last message)",
+        "Styled with Tailwind (CSS animation for dots)",
+        "Typecheck passes",
+        "Verify in browser"
+      ],
+      "priority": 19,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-016",
+      "title": "Build media viewer",
+      "description": "As a user, I want to view shared images in a full-screen viewer with zoom and pan.",
+      "acceptanceCriteria": [
+        "Tapping an image in a message opens a full-screen overlay",
+        "Overlay supports pinch-to-zoom and pan using react-zoom-pan-pinch library (already a dependency)",
+        "Close button (lucide X icon) or tap outside dismisses the viewer",
+        "Smooth fade-in/fade-out animation",
+        "Uses shadcn Dialog as the overlay container",
+        "Styled with Tailwind",
+        "Typecheck passes",
+        "Verify in browser"
+      ],
+      "priority": 20,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-017",
+      "title": "Build settings dialog",
+      "description": "As a user, I want to access settings to control theme, session timeout, and manage my data.",
+      "acceptanceCriteria": [
+        "Settings gear icon (lucide Settings) in sidebar header opens a shadcn Dialog",
+        "Theme section: shadcn Select to choose light / dark / system. Selecting applies immediately by toggling dark class on <html> and respecting prefers-color-scheme for system. Persisted in user settings via Zustand.",
+        "Session timeout section: shadcn Select with options 15 seconds, 60 seconds, 10 minutes, 1 hour, Never. Existing FocusHandler logic applies.",
+        "Manage data section: Export button (copies encrypted JSON to clipboard using navigator.clipboard.writeText), Import button (paste JSON to restore), Delete account button (shadcn AlertDialog confirmation, calls DELETE /users/me). Do NOT use the copy-to-clipboard package — use the native navigator.clipboard API.",
+        "Styled with Tailwind + shadcn",
+        "Typecheck passes",
+        "Verify in browser"
+      ],
+      "priority": 21,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-018",
+      "title": "Remove legacy styling dependencies",
+      "description": "As a developer, I want all legacy CSS/styling dependencies removed so the bundle is clean.",
+      "acceptanceCriteria": [
+        "All files in src/styles/ deleted except globals.css",
+        "sass, bootstrap, react-bootstrap, react-bootstrap-icons, @emotion/react, @emotion/styled, @mui/icons-material removed from dependencies",
+        "No remaining imports of Bootstrap classes, SCSS files, Emotion styled components, or MUI icons anywhere in the codebase",
+        "lucide-react used for all icons",
+        "App renders correctly with only Tailwind + shadcn styling",
+        "No console warnings about missing stylesheets",
+        "Typecheck passes",
+        "Verify in browser"
+      ],
+      "priority": 22,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-019",
+      "title": "Remove legacy files and unused dependencies",
+      "description": "As a developer, I want all old code removed so the codebase is clean and there is no dead code.",
+      "acceptanceCriteria": [
+        "Old src/pages/ directory deleted (replaced by new pages)",
+        "Old src/components/ directory deleted (replaced by new components and shadcn ui)",
+        "Old src/hooks/ files that were fully replaced are deleted (keep any still imported)",
+        "Old src/constants/themes.ts deleted (replaced by light/dark/system)",
+        "react-json-tree, react-device-detect, use-deep-compare, copy-to-clipboard (replaced by navigator.clipboard), serve, patch-package, react-error-overlay removed",
+        "No unused imports or dead code files remain",
+        "pnpm dev and pnpm build both succeed without errors",
+        "Typecheck passes"
+      ],
+      "priority": 23,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-020",
+      "title": "Add push notification support (server)",
+      "description": "As a developer, I want the server to send Web Push notifications when a recipient is offline so they know they have a new message.",
+      "acceptanceCriteria": [
+        "web-push package installed in apps/server",
+        "VAPID key pair generated and stored as environment variables (VAPID_PUBLIC_KEY, VAPID_PRIVATE_KEY, VAPID_EMAIL)",
+        "New route POST /api/push/subscribe accepts a PushSubscription object and stores it on the user document in MongoDB (new pushSubscription field on User model)",
+        "New route DELETE /api/push/unsubscribe removes the stored push subscription from the user document",
+        "New route GET /api/push/vapid-public-key returns the VAPID public key for client-side subscription",
+        "In the existing out-msg handler in server.ts: when recipient is offline (not in shared.onlineUsers), send a Web Push notification with payload { title: Diskreta, body: You have a new message } with NO message content and NO sender name",
+        "Push send failures (expired subscription etc) are caught and the subscription is removed from the user document",
+        "Existing message queuing to MongoDB is unchanged (push is in addition to the queue)",
+        "Typecheck passes"
+      ],
+      "priority": 24,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-021",
+      "title": "Add push notification support (client)",
+      "description": "As a user, I want to receive a push notification when I get a message while the app is in the background, so I don't miss conversations.",
+      "acceptanceCriteria": [
+        "Service Worker file at public/sw.js handles push events and shows a notification using self.registration.showNotification()",
+        "Notification click opens or focuses the app window",
+        "On first login after registration, the app prompts the user to enable notifications (browser permission prompt). If granted, subscribes and sends the PushSubscription to POST /api/push/subscribe",
+        "On logout or account deletion, calls DELETE /api/push/unsubscribe",
+        "Toggle in settings dialog to enable/disable push notifications. Default: on (prompt shown). If disabled, unsubscribes.",
+        "Push subscription is refreshed on each login (subscriptions can expire)",
+        "Service Worker registered in app entry point",
+        "Works in Chrome and Firefox",
+        "Typecheck passes",
+        "Verify in browser"
+      ],
+      "priority": 25,
+      "passes": false,
+      "notes": ""
+    }
+  ]
+}
