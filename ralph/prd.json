@@ -259,7 +259,7 @@
         "Verify in browser"
       ],
       "priority": 14,
-      "passes": false,
+      "passes": true,
       "notes": "Reuse the existing read receipt logic from the old ChatBody.tsx useEffect. The status icon mapping: outgoing->Clock, sent->Check, delivered->CheckCheck, read->CheckCheck with text-blue-500 color."
     },
     {

@@ -228,3 +228,15 @@ Started: Sun Mar 29 19:17:31 CEST 2026
   - shadcn ScrollArea with `flex-1` works well as the main chat container — takes remaining vertical space
   - The `pnpm build` fails due to pre-existing Bootstrap SCSS import issue (`@import "~bootstrap/scss/bootstrap"` in src/styles/index.scss) — not related to this story, will be fixed in US-018
 ---
+
+## 2026-03-30 - US-011b
+- Added message status icons (lucide-react) to MessageBubble: Clock (outgoing), Check (sent), CheckCheck (delivered), blue CheckCheck (read)
+- Restored read-msg socket emission in ChatBody for received messages with status "new" — ported from old ChatBody.tsx useEffect
+- Files changed:
+  - Modified: src/pages/Main/Chat/MessageBubble.tsx — added StatusIcon component using lucide Clock/Check/CheckCheck, changed timestamp from `<p>` to `<div>` flex row with icon
+  - Modified: src/pages/Main/Chat/ChatBody.tsx — added useEffect to emit read-msg for unread received messages when chat has focus, using useMessageStatus handler
+- **Learnings for future iterations:**
+  - SentMessage.status is a Record<userId, "statusName timestamp"> — split on space to extract status name
+  - The read receipt useEffect depends on `activeChat` (not just messages) so it re-runs when any message changes
+  - StatusIcon uses `message.to[0]._id` to look up status for the recipient — works for 1:1 chats
+---
