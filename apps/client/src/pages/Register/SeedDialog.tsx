@@ -1,28 +1,30 @@
-import { Alert, Col, Container, Row } from "react-bootstrap";
-
 export default function SeedDialog({ seed }: { seed: string }) {
-    return <Container>
-        <Row>
-            <Col className="p-5">
-                <Alert variant="warning" className="rounded-0 p-4 text-warning bg-transparent border-3">
-                    <h2 className="m-0">⚠️ Warning</h2>
-                </Alert>
-                <h2>Do not screenshot this, do not copy paste this.</h2>
-                <h6 className="my-4">We will only display the following seed once. <br /> Please make sure to write it down on paper and store it somewhere safe to recover your account and decrypt the message history if you forget your password.</h6>
-                <Row className="font-monospace pt-4 px-2 px-md-5">
-                    <Col xs={6}>
-                        <ol>
-                            {seed.split(' ').slice(0, 12).map((word, i) => <li key={`li-${i}`}>{word}</li>)}
-                        </ol>
-                    </Col>
-                    <Col xs={6}>
-                        <ol start={13}>
-                            {seed.split(' ').slice(12).map((word, i) => <li key={`li-${i + 12}`}>{word}</li>)}
-                        </ol>
-                    </Col>
-                </Row>
+    const words = seed.split(" ");
 
-            </Col>
-        </Row>
-    </Container>
+    return (
+        <div className="flex flex-col gap-4">
+            <div className="rounded-md border border-destructive/50 bg-destructive/10 p-3">
+                <p className="text-sm font-semibold text-destructive">
+                    Do not screenshot this. Do not copy paste this.
+                </p>
+            </div>
+            <p className="text-sm text-muted-foreground">
+                We will only display the following seed once. Please make sure to
+                write it down on paper and store it somewhere safe to recover your
+                account and decrypt your message history if you forget your
+                password.
+            </p>
+            <div className="grid grid-cols-4 gap-2 font-mono text-sm">
+                {words.map((word, i) => (
+                    <div
+                        key={i}
+                        className="rounded-md border bg-muted/50 px-2 py-1.5 text-center"
+                    >
+                        <span className="text-muted-foreground">{i + 1}.</span>{" "}
+                        {word}
+                    </div>
+                ))}
+            </div>
+        </div>
+    );
 }
