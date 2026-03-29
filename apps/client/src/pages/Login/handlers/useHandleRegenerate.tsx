@@ -2,9 +2,10 @@ import { defaultSettings } from "constants/defaultSettings"
 import { USER_DIGEST } from "constants/localStorage"
 import { pki, util } from "node-forge"
 import { useRef } from "react"
-import { Form } from "react-bootstrap"
 import { useNavigate } from "react-router-dom"
 import { toast } from "react-toastify"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
 import { useAuthStore } from "stores/auth"
 import { useChatsStore } from "stores/chats"
 import { useUIStore } from "stores/ui"
@@ -68,13 +69,16 @@ export default function useHandleRegenerate(nick: string, password: string) {
             submitLabel: "Generate",
             Content: () => {
                 return (
-                    <Form className="p-5" onSubmit={doRegenerate}>
-                        <p>Welcome to a new device. You need to regenerate your keypair in order to use Diskreta here.</p>
-                        <p>Please note we do not store your messages and you will need to export them from your old device.</p>
-                        <p>This feature is planned for upcoming releases.</p>
-                        <p><strong>If this is not your device,</strong> log out after your session to destroy your data.</p>
-                        <Form.Control className="rounded-0 border-3" type="text" placeholder="Seed" onChange={e => { mnemonic.current = e.target.value }} />
-                    </Form>
+                    <div className="flex flex-col gap-4">
+                        <p className="text-sm text-muted-foreground">Welcome to a new device. You need to regenerate your keypair in order to use Diskreta here.</p>
+                        <p className="text-sm text-muted-foreground">Please note we do not store your messages and you will need to export them from your old device.</p>
+                        <p className="text-sm text-muted-foreground">This feature is planned for upcoming releases.</p>
+                        <p className="text-sm"><strong>If this is not your device,</strong> log out after your session to destroy your data.</p>
+                        <div className="flex flex-col gap-2">
+                            <Label htmlFor="regen-seed">Seed phrase</Label>
+                            <Input id="regen-seed" type="text" placeholder="Enter your seed phrase" onChange={e => { mnemonic.current = e.target.value }} />
+                        </div>
+                    </div>
                 )
             },
             onConfirm: doRegenerate

@@ -1,9 +1,10 @@
 import { USER_DIGEST } from "constants/localStorage";
 import { pki, util } from "node-forge";
 import { useRef } from "react";
-import { Form } from "react-bootstrap";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { useAuthStore } from "stores/auth";
 import { useChatsStore } from "stores/chats";
 import { useUIStore } from "stores/ui";
@@ -128,14 +129,15 @@ export default function useHandleMnemonicSubmit(mnemonic: React.MutableRefObject
                 setDialog({
                     submitLabel: "Confirm",
                     Content: () => (
-                        <Form className="p-5" onSubmit={handleNewPasswordSubmit}>
-                            <Form.Control
+                        <div className="flex flex-col gap-2">
+                            <Label htmlFor="new-password">New password</Label>
+                            <Input
+                                id="new-password"
                                 type="password"
-                                className="rounded-0"
-                                placeholder="New password"
+                                placeholder="Enter a new password"
                                 onChange={e => { newPassword.current = e.target.value }}
                             />
-                        </Form>
+                        </div>
                     ),
                     onConfirm: handleNewPasswordSubmit
                 })

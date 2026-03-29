@@ -1,38 +1,57 @@
-import { Button, Container, Modal } from "react-bootstrap"
-import { Close } from "@mui/icons-material"
+import { X } from "lucide-react"
+import { Button } from "@/components/ui/button"
+import {
+    Dialog as ShadcnDialog,
+    DialogContent,
+    DialogFooter,
+    DialogHeader,
+    DialogTitle,
+} from "@/components/ui/dialog"
 import { useUIStore } from "stores/ui"
 
 export function DialogClose() {
     const setDialog = useUIStore(s => s.setDialog)
-    return <Close className="cursor-pointer position-absolute end-0 me-3" onClick={() => setDialog(null)} style={{ top: '1em' }} />
+    return (
+        <button
+            className="absolute right-4 top-4 rounded-sm opacity-70 hover:opacity-100 transition-opacity"
+            onClick={() => setDialog(null)}
+        >
+            <X className="size-4" />
+        </button>
+    )
 }
 
 export default function Dialog() {
-    const Dialog = useUIStore(s => s.dialog)
+    const dialog = useUIStore(s => s.dialog)
     const setDialog = useUIStore(s => s.setDialog)
 
     const handleSubmit = () => {
-        Dialog?.onConfirm()
+        dialog?.onConfirm()
         setDialog(null)
     }
 
-    return <Modal show={!!Dialog} className="mt-3">
-        {
-            Dialog && (<>
-                <Dialog.Content />
-                <Container className="d-flex justify-content-end px-5 pb-4">
-                    <Button variant="outline-light" style={{ opacity: 0.9 }} className="rounded-0" onClick={() => setDialog(null)}>
-                        {
-                            Dialog.cancelLabel || "Cancel"
-                        }
-                    </Button>
-                    {
-                        Dialog.submitLabel &&
-                        <Button variant="outline-info" className="btn-submit ms-4" onClick={handleSubmit}>{Dialog.submitLabel}</Button>
-                    }
-                </Container>
-            </>
-            )
-        }
-    </Modal>
+    return (
+        <ShadcnDialog open={!!dialog} onOpenChange={(open) => { if (!open) setDialog(null) }}>
+            {dialog && (
+                <DialogContent>
+                    <DialogHeader>
+                        <DialogTitle>
+                            {dialog.submitLabel === "Generate" ? "Account Recovery" : "Confirm"}
+                        </DialogTitle>
+                    </DialogHeader>
+                    <dialog.Content />
+                    <DialogFooter>
+                        <Button variant="outline" onClick={() => setDialog(null)}>
+                            {dialog.cancelLabel || "Cancel"}
+                        </Button>
+                        {dialog.submitLabel && (
+                            <Button onClick={handleSubmit}>
+                                {dialog.submitLabel}
+                            </Button>
+                        )}
+                    </DialogFooter>
+                </DialogContent>
+            )}
+        </ShadcnDialog>
+    )
 }
