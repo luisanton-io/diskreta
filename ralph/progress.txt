@@ -274,3 +274,23 @@ Started: Sun Mar 29 19:17:31 CEST 2026
   - The old component used Bootstrap Form onSubmit — the new one uses a plain `<form>` with Tailwind styling
   - `resetTextareaHeight()` must be called after sending to collapse the textarea back to 1 row
 ---
+
+## 2026-03-30 - US-012b
+- Added media attachment support to MessageInput and media thumbnail display in MessageBubble
+- Files changed:
+  - Modified: src/pages/Main/Chat/MessageInput.tsx — added Paperclip button to trigger file input, HEIC→PNG conversion via heic2any, image compression via browser-image-compression (max 1000px, 0.8MB), AES encryption of media data with random 256-bit key, RSA encryption of AES key per recipient, inline image preview with X button to remove
+  - Modified: src/pages/Main/Chat/MessageBubble.tsx — added media thumbnail rendering: shows actual image when data is available (clickable to open Spotlight), shows "📷 Sent/Opened" placeholder text when data has been cleared after viewing
+- Features:
+  - File input accepts image/* and .heic files
+  - Selected image compressed and previewed inline above textarea (80x80 thumbnail)
+  - Media encrypted with hybrid AES+RSA scheme matching the old MessageInput pattern
+  - Sent messages store MEDIA_PLACEHOLDER in local chat state (actual data only sent encrypted to recipients)
+  - MessageBubble shows decrypted media as clickable thumbnail (max 240px height), opens Spotlight viewer on click
+  - Send button enabled when either text or media is present
+- **Learnings for future iterations:**
+  - The media encryption flow: generate random AES-256 key → AES-encrypt media data → RSA-encrypt the AES key with recipient's public key → send both encrypted blobs
+  - `convertFileToBase64` returns a data URL (data:image/png;base64,...) which can be used directly as img src
+  - MEDIA_PLACEHOLDER ('📷') is stored in sent messages locally — the actual data is only kept encrypted in transit
+  - The Spotlight component (US-016) still uses old @mui/icons-material import and SCSS animations — will need updating
+  - `fileInputRef.current.value = ""` must be cleared after file selection to allow re-selecting the same file
+---
