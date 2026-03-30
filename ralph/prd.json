@@ -277,7 +277,7 @@
         "Verify in browser"
       ],
       "priority": 15,
-      "passes": false,
+      "passes": true,
       "notes": "The URL regex and emoji regex can be copied from the old Message.tsx. The date separator logic can be copied from the old ChatBody.tsx (compare day of adjacent messages). ScrollToBottom is a simple floating button with an onClick that scrolls the container."
     },
     {

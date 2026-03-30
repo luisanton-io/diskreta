@@ -15,6 +15,7 @@
 - `DialogClose` exported from `components/Dialog` is still used by old Main page components (Settings, UsersReaction) — keep until those pages are redesigned
 - Layout uses Tailwind responsive classes: `hidden md:flex` / `flex` to toggle sidebar vs chat panel on mobile; no CSS media queries needed
 - Settings component renders its own trigger button — import it directly in SideHeader, don't try to extract the dialog content separately
+- shadcn ScrollArea doesn't forward refs — use wrapper div + `[data-slot="scroll-area-viewport"]` query to access the scrollable element
 
 # Ralph Progress Log
 Started: Sun Mar 29 19:17:31 CEST 2026
@@ -239,4 +240,17 @@ Started: Sun Mar 29 19:17:31 CEST 2026
   - SentMessage.status is a Record<userId, "statusName timestamp"> — split on space to extract status name
   - The read receipt useEffect depends on `activeChat` (not just messages) so it re-runs when any message changes
   - StatusIcon uses `message.to[0]._id` to look up status for the recipient — works for 1:1 chats
+---
+
+## 2026-03-30 - US-011c
+- Added auto-scroll, scroll-to-bottom button, date separators, URL linking, and emoji-only rendering
+- Files changed:
+  - Modified: src/pages/Main/Chat/ChatBody.tsx — wrapped ScrollArea in a div with callback ref to access viewport element, added scroll tracking (isNearBottom), auto-scroll on new messages, scroll-to-bottom on chat change, floating ArrowDown button, date separator logic (Today/Yesterday/full date)
+  - Modified: src/pages/Main/Chat/MessageBubble.tsx — added URL regex + `renderTextWithLinks()` for clickable links, emoji regex + `isEmojiOnly()` for large emoji rendering (text-3xl)
+- **Learnings for future iterations:**
+  - shadcn ScrollArea doesn't forward refs — use a wrapper div with callback ref and query `[data-slot="scroll-area-viewport"]` to get the scrollable element
+  - The wrapper div needs `min-h-0` to work properly in a flex column (prevents flex item from overflowing)
+  - URL regex from old Message.tsx validates full URLs including IP addresses and domain names; words are split by whitespace and tested individually
+  - Emoji-only detection uses Unicode range regex — if text is purely emoji, render at 3xl size
+  - `pnpm build` still fails due to pre-existing Bootstrap SCSS import — unrelated, will be fixed in US-018
 ---
