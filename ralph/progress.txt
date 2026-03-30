@@ -254,3 +254,23 @@ Started: Sun Mar 29 19:17:31 CEST 2026
   - Emoji-only detection uses Unicode range regex — if text is purely emoji, render at 3xl size
   - `pnpm build` still fails due to pre-existing Bootstrap SCSS import — unrelated, will be fixed in US-018
 ---
+
+## 2026-03-30 - US-012a
+- Rewrote MessageInput component with Tailwind + shadcn Button, replacing Bootstrap Form/Button/Icons
+- Files changed:
+  - Rewritten: src/pages/Main/Chat/MessageInput.tsx — replaced Bootstrap Form, react-bootstrap Button/Camera/Send/Close, @mui/icons-material Close with Tailwind-styled textarea + shadcn Button + lucide Send icon
+- Features:
+  - Auto-growing textarea (max ~5 lines / 120px, then scrolls)
+  - Send button with lucide Send icon, disabled when empty or disconnected
+  - Enter sends, Shift+Enter inserts newline
+  - Typing indicator socket events preserved (debounced isTyping state → interval emits)
+  - RSA encryption of text with recipient public key preserved
+  - Socket.IO out-msg emit with ACK + retry loop preserved
+  - Reply-to state wiring preserved (cleared on chat change, included in payload)
+  - Media handling removed (deferred to US-012b)
+- **Learnings for future iterations:**
+  - The textarea auto-grow pattern: set `height: auto` then `height: Math.min(scrollHeight, maxPx)` on every change
+  - Media-related imports (imageCompression, heic2any, convertFileToBase64, AES for media encryption) were removed — they'll be re-added in US-012b
+  - The old component used Bootstrap Form onSubmit — the new one uses a plain `<form>` with Tailwind styling
+  - `resetTextareaHeight()` must be called after sending to collapse the textarea back to 1 row
+---
