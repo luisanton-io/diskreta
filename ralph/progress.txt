@@ -399,3 +399,19 @@ Started: Sun Mar 29 19:17:31 CEST 2026
   - react-json-tree was only used by ServerEcho — replaced with plain `<pre>` + JSON.stringify for zero-dependency debug output
   - `font-monospace` is Bootstrap, `font-mono` is Tailwind — easy to confuse
 ---
+
+## 2026-03-30 - US-019
+- Removed legacy files and unused dependencies
+- Files changed:
+  - Deleted: src/hooks/usePrevious.ts, src/hooks/useDisplayTimestamp.ts, src/App.test.tsx, src/constants/themes.ts
+  - Modified: src/components/FocusHandler.tsx (replaced react-device-detect with inline UA check)
+  - Modified: src/components/Dialog.tsx (removed unused DialogClose export)
+  - Modified: src/types/index.ts (inlined Theme type, removed themes.ts import)
+  - Modified: tsconfig.json (excluded test files from type checking)
+  - Modified: package.json (removed 12 unused deps: react-json-tree, react-device-detect, use-deep-compare, copy-to-clipboard, serve, patch-package, classnames, web-vitals, @testing-library/jest-dom, @testing-library/react, @testing-library/user-event, @types/jest)
+- **Learnings for future iterations:**
+  - Old pages/components/hooks directories were already cleaned during previous stories (US-005 through US-018 rewrote files in place) — the "old directory" ACs were already satisfied
+  - react-error-overlay was already removed in US-001 — no action needed
+  - Test files (*.test.ts/tsx) should be excluded from tsconfig when no test runner is configured — otherwise removing @types/jest breaks typecheck
+  - react-device-detect's `isMobile` can be trivially replaced with a UA regex check
+---
