@@ -1,7 +1,6 @@
 import useActiveChat from "hooks/useActiveChat";
 import { useContext, useEffect, useState } from "react";
-import { Button } from "react-bootstrap";
-import { JSONTree } from "react-json-tree";
+import { Button } from "@/components/ui/button";
 import { ChatContext } from "./context/ChatCtx";
 export interface SocketEcho {
     event: string
@@ -43,15 +42,15 @@ export default function ServerEcho() {
     }, [activeChatId])
 
 
-    return <div id="server-echo"
-        data-server-view={serverView}
-    >
-        <Button variant="outline-warning" style={{ height: 42 }} className="btn-submit" onClick={() => { setServerView(v => !v) }}>
+    return <div>
+        <Button variant="outline" className="h-[42px] text-yellow-500 border-yellow-500 hover:bg-yellow-500/10" onClick={() => { setServerView(v => !v) }}>
             {serverView ? "Hide" : "Show"} server logs
         </Button>
         {
             serverView &&
-            <JSONTree data={serverEcho.length ? serverEcho : { message: "No activity detected." }} hideRoot />
+            <pre className="mt-2 max-h-60 overflow-auto rounded bg-muted p-3 text-xs text-foreground">
+                {JSON.stringify(serverEcho.length ? serverEcho : { message: "No activity detected." }, null, 2)}
+            </pre>
         }
     </div>
 }
