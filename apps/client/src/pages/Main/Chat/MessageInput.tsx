@@ -277,6 +277,25 @@ export default function MessageInput() {
       onSubmit={handleSendMessage}
       className="border-t border-border"
     >
+      {replyingTo && (
+        <div className="flex items-center gap-2 px-3 pt-3">
+          <div className="flex-1 rounded-lg border-l-4 border-primary bg-muted px-3 py-2">
+            <p className="m-0 text-xs font-semibold text-foreground">
+              {replyingTo.sender._id === user?._id ? "You" : replyingTo.sender.nick}
+            </p>
+            <p className="m-0 truncate text-xs text-muted-foreground">
+              {replyingTo.content.text || "📷 Photo"}
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={() => setReplyingTo(undefined)}
+            className="shrink-0 rounded-full p-1 text-muted-foreground hover:bg-accent hover:text-foreground"
+          >
+            <X className="h-4 w-4" />
+          </button>
+        </div>
+      )}
       {media && (
         <div className="flex items-center gap-2 px-3 pt-3">
           <div className="relative">

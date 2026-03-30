@@ -1,7 +1,10 @@
 import { cn } from "@/lib/utils"
 import { MEDIA_PLACEHOLDER } from "constants/mediaPlaceholder"
 import { Clock, Check, CheckCheck } from "lucide-react"
-import { useContext } from "react"
+import { useContext, useEffect } from "react"
+import useSwipe from "hooks/useSwipe"
+import { useAuthStore } from "stores/auth"
+import { useUIStore } from "stores/ui"
 import { isMessageSent } from "util/isMessageSent"
 import { ChatContext } from "./context/ChatCtx"
 import { SpotlightProps } from "./Spotlight"
@@ -62,7 +65,26 @@ function isEmojiOnly(text: string): boolean {
 }
 
 export default function MessageBubble({ message, sent }: Props) {
-  const { setSpotlight } = useContext(ChatContext)
+  const user = useAuthStore((s) => s.user)
+  const { setSpotlight, handleScrollTo } = useContext(ChatContext)
+  const setReplyingTo = useUIStore((s) => s.setReplyingTo)
+
+  const { deltaX, vSwipe, ...swipeHandlers } = useSwipe()
+
+  const triggerReply = !vSwipe && deltaX > 50
+  const translateX = triggerReply ? 50 : vSwipe ? 0 : deltaX
+  const transform = translateX ? `translateX(-${translateX}px)` : undefined
+
+  useEffect(() => {
+    if (triggerReply) {
+      navigator.vibrate?.(80)
+      setReplyingTo({
+        sender: message.sender,
+        hash: message.hash,
+        content: message.content,
+      })
+    }
+  }, [triggerReply, setReplyingTo, message])
 
   const messageTime = new Date(message.timestamp).toLocaleTimeString([], {
     hour: "2-digit",
@@ -84,8 +106,17 @@ export default function MessageBubble({ message, sent }: Props) {
     } as SpotlightProps)
   }
 
+  const replyingSender = message.replyingTo?.sender
+  const replyingText = message.replyingTo?.content.text
+  const isOwnReply = replyingSender?._id === user?._id
+
   return (
-    <div className={cn("flex", sent ? "justify-end" : "justify-start")}>
+    <div
+      id={`_${message.hash}`}
+      className={cn("flex items-center", sent ? "justify-end" : "justify-start")}
+      style={{ transform, transition: deltaX ? undefined : "transform 0.2s ease" }}
+      {...swipeHandlers}
+    >
       <div
         className={cn(
           "max-w-[75%] rounded-2xl px-3 py-2",
@@ -94,6 +125,31 @@ export default function MessageBubble({ message, sent }: Props) {
             : "bg-muted text-foreground"
         )}
       >
+        {message.replyingTo && (
+          <button
+            type="button"
+            onClick={handleScrollTo(message.replyingTo.hash)}
+            className={cn(
+              "mb-1 w-full rounded-lg px-3 py-2 text-left text-xs border-l-4",
+              sent
+                ? "bg-primary-foreground/15 border-primary-foreground/50"
+                : "bg-background/50 border-foreground/30"
+            )}
+          >
+            <p className={cn(
+              "m-0 font-semibold",
+              sent ? "text-primary-foreground" : "text-foreground"
+            )}>
+              {isOwnReply ? "You" : replyingSender?.nick}
+            </p>
+            <p className={cn(
+              "m-0 truncate",
+              sent ? "text-primary-foreground/70" : "text-muted-foreground"
+            )}>
+              {replyingText || "📷 Photo"}
+            </p>
+          </button>
+        )}
         {media && (
           hasMediaData ? (
             <button

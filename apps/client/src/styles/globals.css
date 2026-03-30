@@ -88,3 +88,21 @@
     height: 100%;
   }
 }
+
+@keyframes flash-highlight {
+  0%, 100% { background-color: transparent; }
+  50% { background-color: hsl(210 40% 96.1% / 0.6); }
+}
+
+.dark .flashing {
+  animation: flash-highlight-dark 0.6s ease-in-out 2;
+}
+
+.flashing {
+  animation: flash-highlight 0.6s ease-in-out 2;
+}
+
+@keyframes flash-highlight-dark {
+  0%, 100% { background-color: transparent; }
+  50% { background-color: hsl(217.2 32.6% 17.5% / 0.6); }
+}
