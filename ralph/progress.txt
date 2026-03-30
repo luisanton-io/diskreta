@@ -294,3 +294,22 @@ Started: Sun Mar 29 19:17:31 CEST 2026
   - The Spotlight component (US-016) still uses old @mui/icons-material import and SCSS animations — will need updating
   - `fileInputRef.current.value = ""` must be cleared after file selection to allow re-selecting the same file
 ---
+
+## 2026-03-30 - US-013
+- Built reply-to functionality: swipe-to-reply gesture, reply bar in input, quoted reply block in messages, scroll-to-reply with flash animation
+- Files changed:
+  - Modified: src/pages/Main/Chat/MessageBubble.tsx — added useSwipe hook for swipe-to-reply gesture (50px threshold, vibration feedback), added quoted reply block above message content with left border accent, added message ID for scroll-to targeting, added transform style for swipe visual feedback
+  - Modified: src/pages/Main/Chat/MessageInput.tsx — added reply bar above message input showing sender nick ("You" for own messages) and truncated message preview, X button to cancel reply
+  - Modified: src/styles/globals.css — added `flashing` CSS animation (flash-highlight keyframes) for scroll-to-reply visual feedback, with separate dark mode variant
+- Features:
+  - Swipe right on a message triggers reply mode (uses existing useSwipe hook)
+  - Reply bar shows sender name + message preview with close button
+  - Quoted reply block in message bubble is clickable — scrolls to and flashes the original message
+  - Existing reply encryption and payload logic in MessageInput was already wired (from US-012a)
+  - "You" displayed instead of own nick in reply attribution
+- **Learnings for future iterations:**
+  - The `handleScrollTo` in Chat/index.tsx uses `chatWrapperRef.querySelector(`#_${hash}`)` — message elements need `id={`_${hash}`}` attribute for this to work
+  - The flashing animation uses CSS `animationend` event listener for cleanup — the class is added after a 500ms delay to allow scroll to complete
+  - Swipe transform needs a transition only when `deltaX` is 0 (snapping back), not during active swipe — use `transition: deltaX ? undefined : "transform 0.2s ease"`
+  - `pnpm build` still fails due to pre-existing Bootstrap SCSS import — unrelated, will be fixed in US-018
+---
