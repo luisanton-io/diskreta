@@ -16,6 +16,7 @@
 - Layout uses Tailwind responsive classes: `hidden md:flex` / `flex` to toggle sidebar vs chat panel on mobile; no CSS media queries needed
 - Settings component renders its own trigger button — import it directly in SideHeader, don't try to extract the dialog content separately
 - shadcn ScrollArea doesn't forward refs — use wrapper div + `[data-slot="scroll-area-viewport"]` query to access the scrollable element
+- The `reactions` array constant is in `constants/reactions.ts` — the Reaction type is derived from it in `types/index.ts`
 
 # Ralph Progress Log
 Started: Sun Mar 29 19:17:31 CEST 2026
@@ -312,4 +313,26 @@ Started: Sun Mar 29 19:17:31 CEST 2026
   - The flashing animation uses CSS `animationend` event listener for cleanup — the class is added after a 500ms delay to allow scroll to complete
   - Swipe transform needs a transition only when `deltaX` is 0 (snapping back), not during active swipe — use `transition: deltaX ? undefined : "transform 0.2s ease"`
   - `pnpm build` still fails due to pre-existing Bootstrap SCSS import — unrelated, will be fixed in US-018
+---
+
+## 2026-03-30 - US-014
+- Built emoji reactions: long-press picker, reaction sending/receiving, reaction badges, reaction detail dialog
+- Files changed:
+  - Created: src/constants/reactions.ts — moved `reactions` array from old Message.tsx to shared location
+  - Created: src/components/ui/popover.tsx — added shadcn Popover component
+  - Rewritten: src/pages/Main/Chat/MessageBubble.tsx — added useLongPress hook for 500ms long-press trigger, shadcn Popover with 6 emoji options (👍❤️😂😮😢🙏), reaction badges below bubble showing aggregated counts, shadcn Dialog listing who reacted
+  - Modified: src/types/index.ts — updated Reaction type import from constants/reactions instead of old Message.tsx
+- Features:
+  - Long-press (500ms) on a message opens reaction picker via shadcn Popover
+  - Picker shows 6 emoji options, currently-selected reaction highlighted with bg-accent
+  - Selecting a reaction updates local state + emits out-reaction socket event to recipients
+  - Reaction badges displayed as small pill below message bubble (positioned left for received, right for sent)
+  - Tapping reaction badges opens shadcn Dialog listing each user's reaction
+  - Swipe handlers disabled while picker is open to prevent conflicts
+- **Learnings for future iterations:**
+  - `reactions` array was moved to `constants/reactions.ts` — old Message.tsx still has its own copy but it's the legacy component
+  - Popover with `side="top"` and `align="end"/"start"` based on sent/received works well for reaction picker positioning
+  - Long-press opens Popover by setting `pickerOpen` state in a useEffect watching `longPressed` — this decouples the useLongPress hook from the Popover API
+  - Reaction badges use `absolute -bottom-3` positioning — parent div needs `relative` and messages need enough gap (gap-2) for the overflow
+  - The shadcn Dialog nested inside the Popover trigger works because Dialog uses a portal — no z-index conflicts
 ---
