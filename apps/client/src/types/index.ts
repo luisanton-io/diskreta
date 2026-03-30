@@ -1,5 +1,5 @@
 import { Themes } from "constants/themes";
-import { reactions } from "pages/Main/Chat/Message";
+import { reactions } from "constants/reactions";
 
 declare global {
     type Theme = typeof Themes[keyof typeof Themes];

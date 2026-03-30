@@ -1,13 +1,28 @@
 import { cn } from "@/lib/utils"
 import { MEDIA_PLACEHOLDER } from "constants/mediaPlaceholder"
+import { reactions } from "constants/reactions"
 import { Clock, Check, CheckCheck } from "lucide-react"
-import { useContext, useEffect } from "react"
+import { useContext, useEffect, useRef, useState } from "react"
+import useLongPress from "hooks/useLongPress"
 import useSwipe from "hooks/useSwipe"
+import useUpdateMessage from "hooks/useUpdateMessage"
 import { useAuthStore } from "stores/auth"
 import { useUIStore } from "stores/ui"
 import { isMessageSent } from "util/isMessageSent"
 import { ChatContext } from "./context/ChatCtx"
 import { SpotlightProps } from "./Spotlight"
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover"
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog"
 
 interface Props {
   message: SentMessage | ReceivedMessage
@@ -64,10 +79,58 @@ function isEmojiOnly(text: string): boolean {
   return emojiRegex.test(text.trim())
 }
 
+function aggregateReactions(messageReactions: Record<string, Reaction | undefined>) {
+  return Object.values(messageReactions)
+    .reduce((all, reaction) => {
+      if (!reaction) return all
+      const existing = all.find(([r]) => r === reaction)
+      if (existing) {
+        existing[1]++
+      } else {
+        all.push([reaction, 1])
+      }
+      return all
+    }, [] as [Reaction, number][])
+}
+
+function ReactionsDetail({
+  message,
+  recipients,
+}: {
+  message: SentMessage | ReceivedMessage
+  recipients: User[]
+}) {
+  const user = useAuthStore((s) => s.user)
+
+  return (
+    <div className="space-y-2">
+      {Object.entries(message.reactions || {})
+        .sort(([, a], [, b]) => {
+          return reactions.indexOf(a!) - reactions.indexOf(b!)
+        })
+        .map(([memberId, reaction]) => {
+          if (!reaction) return null
+          const nick =
+            recipients.find((r) => r._id === memberId)?.nick || user?.nick
+          return (
+            <div
+              key={memberId}
+              className="flex items-center gap-3 rounded-lg px-3 py-2"
+            >
+              <span className="text-2xl">{reaction}</span>
+              <span className="text-sm">{nick}</span>
+            </div>
+          )
+        })}
+    </div>
+  )
+}
+
 export default function MessageBubble({ message, sent }: Props) {
   const user = useAuthStore((s) => s.user)
-  const { setSpotlight, handleScrollTo } = useContext(ChatContext)
+  const { setSpotlight, handleScrollTo, socket, recipients } = useContext(ChatContext)
   const setReplyingTo = useUIStore((s) => s.setReplyingTo)
+  const updateMessage = useUpdateMessage()
 
   const { deltaX, vSwipe, ...swipeHandlers } = useSwipe()
 
@@ -85,6 +148,51 @@ export default function MessageBubble({ message, sent }: Props) {
       })
     }
   }, [triggerReply, setReplyingTo, message])
+
+  // Long-press for reaction picker
+  const { longPressTimeout, longPressed, setLongPressed, ...longPressHandlers } = useLongPress()
+  const [pickerOpen, setPickerOpen] = useState(false)
+  const bubbleRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    const currentTimeout = longPressTimeout.current
+    return () => {
+      currentTimeout && clearTimeout(currentTimeout)
+    }
+  }, [deltaX, longPressTimeout])
+
+  useEffect(() => {
+    if (longPressed) {
+      setPickerOpen(true)
+      setLongPressed(false)
+      navigator.vibrate?.(40)
+    }
+  }, [longPressed, setLongPressed])
+
+  const handleReaction = (reaction: Reaction) => {
+    updateMessage({
+      chatId: message.chatId,
+      hash: message.hash,
+      updater: (msg) => ({
+        ...msg,
+        reactions: {
+          ...(msg.reactions || {}),
+          [user!._id]: msg.reactions?.[user!._id] === reaction ? undefined : reaction,
+        },
+      }),
+    })
+    for (const recipient of recipients) {
+      const reactionPayload: ReactionPayload = {
+        chatId: message.chatId,
+        hash: message.hash,
+        senderId: user!._id,
+        recipientId: recipient._id,
+        reaction,
+      }
+      socket.emit("out-reaction", reactionPayload)
+    }
+    setPickerOpen(false)
+  }
 
   const messageTime = new Date(message.timestamp).toLocaleTimeString([], {
     hour: "2-digit",
@@ -110,87 +218,157 @@ export default function MessageBubble({ message, sent }: Props) {
   const replyingText = message.replyingTo?.content.text
   const isOwnReply = replyingSender?._id === user?._id
 
+  const hasReactions =
+    message.reactions && Object.values(message.reactions).some(Boolean)
+  const aggregated = hasReactions
+    ? aggregateReactions(message.reactions as Record<string, Reaction | undefined>)
+    : []
+
   return (
     <div
       id={`_${message.hash}`}
       className={cn("flex items-center", sent ? "justify-end" : "justify-start")}
       style={{ transform, transition: deltaX ? undefined : "transform 0.2s ease" }}
-      {...swipeHandlers}
+      {...(!pickerOpen ? swipeHandlers : {})}
     >
-      <div
-        className={cn(
-          "max-w-[75%] rounded-2xl px-3 py-2",
-          sent
-            ? "bg-primary text-primary-foreground"
-            : "bg-muted text-foreground"
-        )}
-      >
-        {message.replyingTo && (
-          <button
-            type="button"
-            onClick={handleScrollTo(message.replyingTo.hash)}
-            className={cn(
-              "mb-1 w-full rounded-lg px-3 py-2 text-left text-xs border-l-4",
-              sent
-                ? "bg-primary-foreground/15 border-primary-foreground/50"
-                : "bg-background/50 border-foreground/30"
-            )}
-          >
-            <p className={cn(
-              "m-0 font-semibold",
-              sent ? "text-primary-foreground" : "text-foreground"
-            )}>
-              {isOwnReply ? "You" : replyingSender?.nick}
-            </p>
-            <p className={cn(
-              "m-0 truncate",
-              sent ? "text-primary-foreground/70" : "text-muted-foreground"
-            )}>
-              {replyingText || "📷 Photo"}
-            </p>
-          </button>
-        )}
-        {media && (
-          hasMediaData ? (
-            <button
-              type="button"
-              onClick={handleMediaClick}
-              className="mb-1 block overflow-hidden rounded-lg"
+      <Popover open={pickerOpen} onOpenChange={setPickerOpen}>
+        <PopoverTrigger asChild>
+          <div className="relative max-w-[75%]">
+            <div
+              ref={bubbleRef}
+              className={cn(
+                "rounded-2xl px-3 py-2",
+                sent
+                  ? "bg-primary text-primary-foreground"
+                  : "bg-muted text-foreground"
+              )}
+              {...longPressHandlers}
             >
-              <img
-                src={media.data}
-                alt="Media"
-                className="max-h-60 max-w-full rounded-lg object-contain"
-              />
-            </button>
-          ) : (
-            <p className="m-0 text-sm">
-              📷 <span className="opacity-60">{sent ? "Sent" : "Opened"}</span>
-            </p>
-          )
-        )}
-        {text && (
-          <p
-            className={cn(
-              "m-0 whitespace-pre-wrap break-words",
-              emojiOnly ? "text-3xl leading-snug" : "text-sm"
+              {message.replyingTo && (
+                <button
+                  type="button"
+                  onClick={handleScrollTo(message.replyingTo.hash)}
+                  className={cn(
+                    "mb-1 w-full rounded-lg px-3 py-2 text-left text-xs border-l-4",
+                    sent
+                      ? "bg-primary-foreground/15 border-primary-foreground/50"
+                      : "bg-background/50 border-foreground/30"
+                  )}
+                >
+                  <p className={cn(
+                    "m-0 font-semibold",
+                    sent ? "text-primary-foreground" : "text-foreground"
+                  )}>
+                    {isOwnReply ? "You" : replyingSender?.nick}
+                  </p>
+                  <p className={cn(
+                    "m-0 truncate",
+                    sent ? "text-primary-foreground/70" : "text-muted-foreground"
+                  )}>
+                    {replyingText || "📷 Photo"}
+                  </p>
+                </button>
+              )}
+              {media && (
+                hasMediaData ? (
+                  <button
+                    type="button"
+                    onClick={handleMediaClick}
+                    className="mb-1 block overflow-hidden rounded-lg"
+                  >
+                    <img
+                      src={media.data}
+                      alt="Media"
+                      className="max-h-60 max-w-full rounded-lg object-contain"
+                    />
+                  </button>
+                ) : (
+                  <p className="m-0 text-sm">
+                    📷 <span className="opacity-60">{sent ? "Sent" : "Opened"}</span>
+                  </p>
+                )
+              )}
+              {text && (
+                <p
+                  className={cn(
+                    "m-0 whitespace-pre-wrap break-words",
+                    emojiOnly ? "text-3xl leading-snug" : "text-sm"
+                  )}
+                >
+                  {emojiOnly ? text : renderTextWithLinks(text)}
+                </p>
+              )}
+              <div
+                className={cn(
+                  "mt-1 flex items-center justify-end gap-1 text-[0.65rem] leading-none",
+                  sent ? "text-primary-foreground/70" : "text-muted-foreground"
+                )}
+              >
+                <span>{messageTime}</span>
+                {sent && isMessageSent(message) && (
+                  <StatusIcon message={message} />
+                )}
+              </div>
+            </div>
+
+            {hasReactions && (
+              <Dialog>
+                <DialogTrigger asChild>
+                  <button
+                    type="button"
+                    className={cn(
+                      "absolute -bottom-3 flex items-center gap-0.5 rounded-full border border-border bg-background px-1.5 py-0.5 text-xs shadow-sm hover:bg-accent transition-colors",
+                      sent ? "right-2" : "left-2"
+                    )}
+                  >
+                    {aggregated.map(([reaction, count]) => (
+                      <span key={reaction} className="flex items-center">
+                        <span>{reaction}</span>
+                        {count > 1 && (
+                          <span className="ml-0.5 text-[0.6rem] text-muted-foreground">
+                            {count}
+                          </span>
+                        )}
+                      </span>
+                    ))}
+                  </button>
+                </DialogTrigger>
+                <DialogContent className="max-w-xs">
+                  <DialogHeader>
+                    <DialogTitle>Reactions</DialogTitle>
+                  </DialogHeader>
+                  <ReactionsDetail
+                    message={message}
+                    recipients={recipients}
+                  />
+                </DialogContent>
+              </Dialog>
             )}
-          >
-            {emojiOnly ? text : renderTextWithLinks(text)}
-          </p>
-        )}
-        <div
-          className={cn(
-            "mt-1 flex items-center justify-end gap-1 text-[0.65rem] leading-none",
-            sent ? "text-primary-foreground/70" : "text-muted-foreground"
-          )}
+          </div>
+        </PopoverTrigger>
+        <PopoverContent
+          side="top"
+          align={sent ? "end" : "start"}
+          className="w-auto rounded-full border bg-background px-2 py-1.5 shadow-lg"
+          sideOffset={8}
         >
-          <span>{messageTime}</span>
-          {sent && isMessageSent(message) && (
-            <StatusIcon message={message} />
-          )}
-        </div>
-      </div>
+          <div className="flex items-center gap-1">
+            {reactions.map((reaction) => (
+              <button
+                key={reaction}
+                type="button"
+                onClick={() => handleReaction(reaction)}
+                className={cn(
+                  "rounded-full p-1.5 text-xl transition-transform hover:scale-125 hover:bg-accent",
+                  message.reactions?.[user!._id] === reaction && "scale-110 bg-accent"
+                )}
+              >
+                {reaction}
+              </button>
+            ))}
+          </div>
+        </PopoverContent>
+      </Popover>
     </div>
   )
 }
