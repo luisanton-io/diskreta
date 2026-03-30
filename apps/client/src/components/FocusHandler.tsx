@@ -1,6 +1,7 @@
 import { useEffect } from "react";
 import { useUIStore } from "stores/ui";
-import { isMobile } from "react-device-detect";
+
+const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
 
 export default function FocusHandler() {
     const setFocus = useUIStore(state => state.setFocus)

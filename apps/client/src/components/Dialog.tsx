@@ -1,4 +1,3 @@
-import { X } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import {
     Dialog as ShadcnDialog,
@@ -8,18 +7,6 @@ import {
     DialogTitle,
 } from "@/components/ui/dialog"
 import { useUIStore } from "stores/ui"
-
-export function DialogClose() {
-    const setDialog = useUIStore(s => s.setDialog)
-    return (
-        <button
-            className="absolute right-4 top-4 rounded-sm opacity-70 hover:opacity-100 transition-opacity"
-            onClick={() => setDialog(null)}
-        >
-            <X className="size-4" />
-        </button>
-    )
-}
 
 export default function Dialog() {
     const dialog = useUIStore(s => s.dialog)
