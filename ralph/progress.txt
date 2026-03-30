@@ -348,3 +348,15 @@ Started: Sun Mar 29 19:17:31 CEST 2026
   - The Typing component was not rendered in the new Chat layout (Chat/index.tsx) — it needed to be added to ChatBody inside the ScrollArea
   - Conversations list already had typing preview wired from US-008 — no changes needed there
 ---
+
+## 2026-03-30 - US-016
+- Rewrote Spotlight media viewer: replaced @mui/icons-material Close with lucide X, replaced SCSS animation classes with shadcn Dialog + Tailwind animate-in, replaced backdrop SCSS with DialogOverlay + backdrop-blur
+- Files changed:
+  - Rewritten: src/pages/Main/Chat/Spotlight.tsx — uses shadcn Dialog (open, no trigger) as overlay container, lucide X close button, TransformWrapper/TransformComponent for pinch-to-zoom, Tailwind animate-in/fade-in/zoom-in for entry animation
+- Removed: usePrevious hook import (no longer needed — Dialog handles open/close state), useState for fading state
+- **Learnings for future iterations:**
+  - Using shadcn Dialog with `open` prop and no DialogContent (custom layout via DialogPortal + DialogOverlay) gives full control over the overlay while getting radix-ui accessibility (focus trap, escape key)
+  - DialogTitle with `sr-only` class satisfies radix-ui's aria requirement without showing a visible title
+  - TransformComponent needs explicit `wrapperStyle` and `contentStyle` for full-width/height layout — without them the zoom container collapses
+  - The old fading state pattern (in/out + onAnimationEnd) was replaced by Dialog's built-in open/close behavior
+---

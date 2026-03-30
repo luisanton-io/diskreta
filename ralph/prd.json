@@ -387,7 +387,7 @@
         "Verify in browser"
       ],
       "priority": 21,
-      "passes": false,
+      "passes": true,
       "notes": "Rewrite src/pages/Main/Chat/Spotlight.tsx — replace @mui/icons-material Close with lucide X, replace SCSS animation classes with Tailwind/CSS transitions, wrap in shadcn Dialog. The Spotlight component is already rendered in Chat/index.tsx. Do NOT read MessageBubble.tsx fully — it already has onClick handler wired to setSpotlight."
     },
     {
