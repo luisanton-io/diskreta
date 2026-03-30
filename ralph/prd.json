@@ -369,8 +369,8 @@
         "Verify in browser"
       ],
       "priority": 20,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "SMALL STORY. Only touch 2 files: (1) Rewrite src/pages/Main/Chat/Typing.tsx — replace Bootstrap classes with Tailwind, keep the existing logic. (2) In src/pages/Main/Conversations/index.tsx — the typing preview is already wired via chat.typing state, just ensure it shows 'typing...' text. Do NOT read MessageBubble.tsx or MessageInput.tsx — they are irrelevant to this story."
     },
     {
       "id": "US-016",
@@ -388,7 +388,7 @@
       ],
       "priority": 21,
       "passes": false,
-      "notes": ""
+      "notes": "Rewrite src/pages/Main/Chat/Spotlight.tsx — replace @mui/icons-material Close with lucide X, replace SCSS animation classes with Tailwind/CSS transitions, wrap in shadcn Dialog. The Spotlight component is already rendered in Chat/index.tsx. Do NOT read MessageBubble.tsx fully — it already has onClick handler wired to setSpotlight."
     },
     {
       "id": "US-017",

@@ -6,6 +6,7 @@ import { ArrowDown } from "lucide-react"
 import { ChatContext } from "./context/ChatCtx"
 import useMessageStatus from "../handlers/useMessageStatus"
 import MessageBubble from "./MessageBubble"
+import Typing from "./Typing"
 
 function formatDateSeparator(timestamp: number): string {
   const messageDate = new Date(timestamp)
@@ -146,6 +147,8 @@ export default function ChatBody() {
           </div>
         ))}
       </div>
+
+      <Typing />
 
     </ScrollArea>
 

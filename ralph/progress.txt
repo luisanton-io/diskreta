@@ -336,3 +336,15 @@ Started: Sun Mar 29 19:17:31 CEST 2026
   - Reaction badges use `absolute -bottom-3` positioning — parent div needs `relative` and messages need enough gap (gap-2) for the overflow
   - The shadcn Dialog nested inside the Popover trigger works because Dialog uses a portal — no z-index conflicts
 ---
+
+## 2026-03-30 - US-015
+- Rewrote Typing component with Tailwind, replacing Bootstrap position-absolute/d-flex classes
+- Added Typing component to ChatBody at the bottom of the message list (inside ScrollArea)
+- Verified conversations list already shows "typing..." preview via existing chat.typing state
+- Files changed:
+  - Rewritten: src/pages/Main/Chat/Typing.tsx — replaced Bootstrap classes with Tailwind, returns null when no one is typing, animated dots via state interval
+  - Modified: src/pages/Main/Chat/ChatBody.tsx — imported and rendered Typing component after messages
+- **Learnings for future iterations:**
+  - The Typing component was not rendered in the new Chat layout (Chat/index.tsx) — it needed to be added to ChatBody inside the ScrollArea
+  - Conversations list already had typing preview wired from US-008 — no changes needed there
+---
