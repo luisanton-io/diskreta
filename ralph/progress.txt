@@ -382,3 +382,20 @@ Started: Sun Mar 29 19:17:31 CEST 2026
   - navigator.clipboard.writeText() replaces copy-to-clipboard package — returns a promise, needs async/await
   - System theme uses matchMedia('(prefers-color-scheme: dark)') with a change event listener for live updates
 ---
+
+## 2026-03-30 - US-018
+- Removed all legacy styling dependencies: sass, bootstrap, react-bootstrap, react-bootstrap-icons, @emotion/react, @emotion/styled, @mui/icons-material (53 packages removed)
+- Deleted all SCSS files from src/styles/ (kept globals.css)
+- Merged index.css (font import, root viewport styles) into globals.css, then deleted index.css
+- Deleted dead code files with legacy imports: Message.tsx, UsersReaction.tsx, ScrollToBottom.tsx, FloatingDate.tsx, Settings/Sections/*
+- Rewrote ServerEcho.tsx: replaced react-bootstrap Button with shadcn Button, replaced react-json-tree JSONTree with `<pre>` + JSON.stringify
+- Fixed Diskreta.tsx: `font-monospace` (Bootstrap) → `font-mono` (Tailwind)
+- Removed commented bootstrap import from App.tsx
+- Files changed:
+  - Deleted: src/index.css, src/styles/*.scss, src/styles/index.scss, src/pages/Main/Chat/Message.tsx, ScrollToBottom.tsx, FloatingDate.tsx, UsersReaction.tsx, src/pages/Main/Settings/Sections/*
+  - Modified: src/styles/globals.css, src/index.tsx, src/App.tsx, src/components/Diskreta.tsx, src/pages/Main/Chat/ServerEcho.tsx, package.json, pnpm-lock.yaml
+- **Learnings for future iterations:**
+  - After removing bootstrap/react-bootstrap, the build succeeds — the old `@import "~bootstrap/scss/bootstrap"` in index.scss was the blocker for `pnpm build`
+  - react-json-tree was only used by ServerEcho — replaced with plain `<pre>` + JSON.stringify for zero-dependency debug output
+  - `font-monospace` is Bootstrap, `font-mono` is Tailwind — easy to confuse
+---
