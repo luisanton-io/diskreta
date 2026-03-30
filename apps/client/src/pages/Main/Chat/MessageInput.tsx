@@ -2,14 +2,17 @@ import { refreshToken } from "API/refreshToken";
 import { Button } from "@/components/ui/button";
 import { MEDIA_PLACEHOLDER } from "constants/mediaPlaceholder";
 import { AES, SHA256 } from "crypto-js";
+import imageCompression from "browser-image-compression";
+import heic2any from "heic2any";
 import { pki, random, util } from "node-forge";
 import { useContext, useEffect, useRef, useState } from "react";
-import { Send } from "lucide-react";
+import { Paperclip, Send, X } from "lucide-react";
 import { toast } from "react-toastify";
 import { useAuthStore } from "stores/auth";
 import { useChatsStore } from "stores/chats";
 import { useUIStore } from "stores/ui";
 import { Socket } from "socket.io-client";
+import convertFileToBase64 from "util/convertFileToBase64";
 import maskUser from "util/maskUser";
 import useMessageStatus from "../handlers/useMessageStatus";
 import { ChatContext } from "./context/ChatCtx";
@@ -38,6 +41,48 @@ export default function MessageInput() {
   }, [activeChat.id, setReplyingTo]);
 
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const [media, setMedia] = useState<Media | null>(null);
+  const [mediaLoading, setMediaLoading] = useState(false);
+
+  const handleFile: React.ChangeEventHandler<HTMLInputElement> = async (e) => {
+    try {
+      const file = e.target.files?.[0];
+      if (!file) return;
+
+      setMediaLoading(true);
+
+      const selectedFile = await (async () => {
+        if (!file.name.toLowerCase().endsWith("heic")) return file;
+        const pngBlob = (await heic2any({
+          blob: new Blob([file], { type: file.type }),
+          toType: "image/png",
+        })) as Blob;
+        return new File([pngBlob], "image.png", { type: pngBlob.type });
+      })();
+
+      const compressedFile = await imageCompression(selectedFile, {
+        maxWidthOrHeight: 1000,
+        maxSizeMB: 0.8,
+        useWebWorker: true,
+      });
+
+      const mediaObj: Media = {
+        type: "image",
+        data: await convertFileToBase64(compressedFile),
+        encryptionKey: util.bytesToHex(random.getBytesSync(32)),
+      };
+
+      setMedia(mediaObj);
+    } catch (error) {
+      console.error(error);
+      toast.error((error as Error).message);
+    } finally {
+      setMediaLoading(false);
+      if (fileInputRef.current) fileInputRef.current.value = "";
+    }
+  };
 
   const resetTextareaHeight = () => {
     if (textareaRef.current) {
@@ -67,13 +112,13 @@ export default function MessageInput() {
         return toast.error("Cannot connect. Try again later.");
       }
 
-    if (!text) return;
+    if (!text && !media) return;
 
     const payload: Omit<SentMessage, "hash" | "status"> = {
       sender: maskUser(user)!,
       to: recipients,
       chatId: activeChat.id,
-      content: { text },
+      content: { text, media: media || undefined },
       timestamp: Date.now(),
       replyingTo,
     };
@@ -87,6 +132,9 @@ export default function MessageInput() {
       ...message,
       content: {
         text: message.content.text,
+        media: media
+          ? { ...media, data: MEDIA_PLACEHOLDER }
+          : undefined,
       },
       status: recipients.reduce(
         (all, { _id }) => ({
@@ -113,6 +161,16 @@ export default function MessageInput() {
     for (const recipient of recipients) {
       const publicKey = pki.publicKeyFromPem(recipient.publicKey);
 
+      const encryptedMedia = media
+        ? {
+            ...media,
+            encryptionKey: util.encode64(
+              publicKey.encrypt(util.encodeUtf8(media.encryptionKey))
+            ),
+            data: AES.encrypt(media.data, media.encryptionKey).toString(),
+          }
+        : undefined;
+
       const outgoingMessage: OutgoingMessage = {
         ...message,
         to: recipients,
@@ -121,6 +179,7 @@ export default function MessageInput() {
           text:
             text &&
             util.encode64(publicKey.encrypt(util.encodeUtf8(text))),
+          media: encryptedMedia,
         },
         replyingTo: replyingTo && {
           ...replyingTo,
@@ -172,6 +231,7 @@ export default function MessageInput() {
     }
 
     setText("");
+    setMedia(null);
     resetTextareaHeight();
     setReplyingTo(undefined);
     setSpotlight({} as SpotlightProps);
@@ -215,30 +275,67 @@ export default function MessageInput() {
   return (
     <form
       onSubmit={handleSendMessage}
-      className="flex items-end gap-2 border-t border-border p-3"
+      className="border-t border-border"
     >
-      <textarea
-        ref={textareaRef}
-        autoComplete="off"
-        className="flex-1 resize-none rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-        placeholder="Type a message..."
-        rows={1}
-        value={text}
-        onChange={handleInput}
-        onKeyDown={(e) => {
-          if (e.key === "Enter" && !e.shiftKey) {
-            handleSendMessage(e);
-          }
-        }}
-      />
-      <Button
-        type="submit"
-        size="icon"
-        disabled={!text || !connected}
-        className="shrink-0"
-      >
-        <Send className="h-4 w-4" />
-      </Button>
+      {media && (
+        <div className="flex items-center gap-2 px-3 pt-3">
+          <div className="relative">
+            <img
+              src={media.data}
+              alt="Preview"
+              className="h-20 w-20 rounded-md object-cover"
+            />
+            <button
+              type="button"
+              onClick={() => setMedia(null)}
+              className="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full bg-destructive text-destructive-foreground"
+            >
+              <X className="h-3 w-3" />
+            </button>
+          </div>
+        </div>
+      )}
+      <div className="flex items-end gap-2 p-3">
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept="image/*,.heic"
+          className="hidden"
+          onChange={handleFile}
+        />
+        <Button
+          type="button"
+          variant="ghost"
+          size="icon"
+          disabled={mediaLoading}
+          className="shrink-0"
+          onClick={() => fileInputRef.current?.click()}
+        >
+          <Paperclip className="h-4 w-4" />
+        </Button>
+        <textarea
+          ref={textareaRef}
+          autoComplete="off"
+          className="flex-1 resize-none rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+          placeholder="Type a message..."
+          rows={1}
+          value={text}
+          onChange={handleInput}
+          onKeyDown={(e) => {
+            if (e.key === "Enter" && !e.shiftKey) {
+              handleSendMessage(e);
+            }
+          }}
+        />
+        <Button
+          type="submit"
+          size="icon"
+          disabled={(!text && !media) || !connected}
+          className="shrink-0"
+        >
+          <Send className="h-4 w-4" />
+        </Button>
+      </div>
     </form>
   );
 }

@@ -1,6 +1,10 @@
 import { cn } from "@/lib/utils"
+import { MEDIA_PLACEHOLDER } from "constants/mediaPlaceholder"
 import { Clock, Check, CheckCheck } from "lucide-react"
+import { useContext } from "react"
 import { isMessageSent } from "util/isMessageSent"
+import { ChatContext } from "./context/ChatCtx"
+import { SpotlightProps } from "./Spotlight"
 
 interface Props {
   message: SentMessage | ReceivedMessage
@@ -58,13 +62,27 @@ function isEmojiOnly(text: string): boolean {
 }
 
 export default function MessageBubble({ message, sent }: Props) {
+  const { setSpotlight } = useContext(ChatContext)
+
   const messageTime = new Date(message.timestamp).toLocaleTimeString([], {
     hour: "2-digit",
     minute: "2-digit",
   })
 
   const text = message.content.text
+  const media = message.content.media
   const emojiOnly = text ? isEmojiOnly(text) : false
+
+  const hasMediaData = media && media.data !== MEDIA_PLACEHOLDER
+
+  const handleMediaClick = () => {
+    if (!hasMediaData) return
+    setSpotlight({
+      media: media,
+      hash: message.hash,
+      resetMedia: () => {},
+    } as SpotlightProps)
+  }
 
   return (
     <div className={cn("flex", sent ? "justify-end" : "justify-start")}>
@@ -76,6 +94,25 @@ export default function MessageBubble({ message, sent }: Props) {
             : "bg-muted text-foreground"
         )}
       >
+        {media && (
+          hasMediaData ? (
+            <button
+              type="button"
+              onClick={handleMediaClick}
+              className="mb-1 block overflow-hidden rounded-lg"
+            >
+              <img
+                src={media.data}
+                alt="Media"
+                className="max-h-60 max-w-full rounded-lg object-contain"
+              />
+            </button>
+          ) : (
+            <p className="m-0 text-sm">
+              📷 <span className="opacity-60">{sent ? "Sent" : "Opened"}</span>
+            </p>
+          )
+        )}
         {text && (
           <p
             className={cn(
@@ -85,9 +122,6 @@ export default function MessageBubble({ message, sent }: Props) {
           >
             {emojiOnly ? text : renderTextWithLinks(text)}
           </p>
-        )}
-        {message.content.media && !text && (
-          <p className="m-0 text-sm">📷 Photo</p>
         )}
         <div
           className={cn(
