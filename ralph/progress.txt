@@ -360,3 +360,25 @@ Started: Sun Mar 29 19:17:31 CEST 2026
   - TransformComponent needs explicit `wrapperStyle` and `contentStyle` for full-width/height layout — without them the zoom container collapses
   - The old fading state pattern (in/out + onAnimationEnd) was replaced by Dialog's built-in open/close behavior
 ---
+
+## 2026-03-30 - US-017
+- Rebuilt Settings as a self-contained shadcn Dialog (no longer uses UIStore dialog system)
+- Replaced old Theme section (Bootstrap ListGroup + @mui Done icon + old Themes enum) with shadcn Select offering light/dark/system
+- Replaced old SessionTimeout section (Bootstrap form-control select) with shadcn Select
+- Replaced old ManageData section (react-bootstrap ListGroup/Button, react-bootstrap-icons, copy-to-clipboard) with shadcn Button + navigator.clipboard API + AlertDialog for delete confirmation
+- Added import data sub-dialog with textarea for pasting exported JSON
+- Updated App.tsx theme effect to toggle `dark` class on `<html>` with system preference listener
+- Updated constants/themes.ts to new values (light/dark/system), defaultSettings.ts default to "dark"
+- Files changed:
+  - Rewritten: src/pages/Main/Settings/index.tsx — single self-contained component with shadcn Dialog, Select, AlertDialog, Button
+  - Modified: src/App.tsx — theme effect uses classList.toggle('dark') + matchMedia listener for system theme
+  - Modified: src/constants/themes.ts — new values: light, dark, system
+  - Modified: src/constants/defaultSettings.ts — default theme changed from 'Default' to 'dark'
+  - Modified: src/stores/ui.ts — default theme changed from 'Default' to 'dark'
+  - Created: src/components/ui/select.tsx (via shadcn CLI)
+- **Learnings for future iterations:**
+  - Settings is now self-contained (manages its own Dialog open state) — no longer routes through UIStore dialog system
+  - The old Sections/ subdirectory files (Theme.tsx, SessionTimeout.tsx, ManageData.tsx, index.tsx) are now dead code — can be deleted in US-019
+  - navigator.clipboard.writeText() replaces copy-to-clipboard package — returns a promise, needs async/await
+  - System theme uses matchMedia('(prefers-color-scheme: dark)') with a change event listener for live updates
+---
