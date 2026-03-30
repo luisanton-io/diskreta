@@ -10,7 +10,6 @@ import FocusHandler from 'components/FocusHandler';
 import { useEffect } from 'react';
 import 'react-toastify/dist/ReactToastify.css';
 import { useAuthStore } from 'stores/auth';
-import './styles/index.scss';
 
 const Debug = () => {
   const user = useAuthStore(s => s.user)
@@ -27,10 +26,19 @@ const Debug = () => {
 
 function App() {
 
-  const theme = useAuthStore(s => s.user?.settings.theme ?? 'Default')
+  const theme = useAuthStore(s => s.user?.settings.theme ?? 'dark')
 
   useEffect(() => {
-    document.querySelector("body")?.setAttribute("data-theme", theme)
+    const html = document.documentElement
+    if (theme === 'system') {
+      const mq = window.matchMedia('(prefers-color-scheme: dark)')
+      const apply = () => html.classList.toggle('dark', mq.matches)
+      apply()
+      mq.addEventListener('change', apply)
+      return () => mq.removeEventListener('change', apply)
+    } else {
+      html.classList.toggle('dark', theme === 'dark')
+    }
   }, [theme])
 
   return (<>

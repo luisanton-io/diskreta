@@ -1,4 +1,4 @@
 export const defaultSettings: Settings = {
-    theme: 'Default',
+    theme: 'dark',
     sessionTimeout: 15
 }

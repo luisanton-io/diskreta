@@ -32,7 +32,7 @@ interface UIState {
 }
 
 export const useUIStore = create<UIState>()((set) => ({
-    theme: 'Default' as Theme,
+    theme: 'dark' as Theme,
     setTheme: (theme) => set({ theme }),
 
     dialog: null,
