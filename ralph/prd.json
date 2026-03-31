@@ -479,7 +479,7 @@
         "Verify in browser"
       ],
       "priority": 26,
-      "passes": false,
+      "passes": true,
       "notes": ""
     }
   ]

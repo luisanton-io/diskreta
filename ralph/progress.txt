@@ -434,3 +434,21 @@ Started: Sun Mar 29 19:17:31 CEST 2026
   - Push notifications fire-and-forget (`.catch(console.error)`) to avoid blocking message queuing
   - Expired/invalid subscriptions (410, 404) are auto-cleaned from the user document
 ---
+
+## 2026-03-31 - US-021
+- Implemented client-side push notification support
+- Files changed:
+  - Created: public/sw.js (service worker handling push events and notification clicks)
+  - Created: src/util/pushNotifications.ts (registerServiceWorker, subscribeToPush, unsubscribeFromPush utilities)
+  - Created: src/hooks/usePushNotifications.ts (reactive hook that subscribes on login when push is enabled)
+  - Modified: src/types/types.d.ts (added pushNotificationsEnabled to Settings interface)
+  - Modified: src/constants/defaultSettings.ts (added pushNotificationsEnabled: true default)
+  - Modified: src/index.tsx (registers service worker on app load)
+  - Modified: src/App.tsx (added usePushNotifications hook)
+  - Modified: src/pages/Main/Settings/index.tsx (added push toggle, wired unsubscribe to logout and delete account)
+- **Learnings for future iterations:**
+  - Push subscription is refreshed on each login via usePushNotifications hook reacting to auth state changes
+  - urlBase64ToUint8Array conversion is needed for VAPID applicationServerKey (Web Push API requires Uint8Array)
+  - Service worker must be in public/ root to have the correct scope for push subscriptions
+  - Settings toggle uses subscribeToPush/unsubscribeFromPush directly — no separate state needed beyond the persisted setting
+---
