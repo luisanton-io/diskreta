@@ -19,4 +19,5 @@ interface LoggedUser extends CurrentUser {
 interface Settings {
     theme: Theme
     sessionTimeout: number
+    pushNotificationsEnabled: boolean
 }

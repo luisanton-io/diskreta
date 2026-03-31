@@ -1,10 +1,11 @@
 import API from "API";
 import { AxiosError } from "axios";
 import { CHATS, USER, USER_DIGEST } from "constants/localStorage";
-import { Download, LogOut, Settings as SettingsIcon, Trash2, Upload } from "lucide-react";
+import { Bell, BellOff, Download, LogOut, Settings as SettingsIcon, Trash2, Upload } from "lucide-react";
 import { useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuthStore } from "stores/auth";
+import { subscribeToPush, unsubscribeFromPush } from "util/pushNotifications";
 
 import {
     AlertDialog,
@@ -62,8 +63,21 @@ export default function Settings() {
     const navigate = useNavigate();
     const theme = useAuthStore(s => s.user?.settings.theme ?? "dark") as Theme;
     const sessionTimeout = useAuthStore(s => s.user?.settings.sessionTimeout ?? 15);
+    const pushEnabled = useAuthStore(s => s.user?.settings.pushNotificationsEnabled ?? true);
     const updateSettings = useAuthStore(s => s.updateSettings);
     const importedDataRef = useRef("");
+
+    const handlePushToggle = async () => {
+        if (pushEnabled) {
+            await unsubscribeFromPush();
+            updateSettings({ pushNotificationsEnabled: false });
+        } else {
+            const success = await subscribeToPush();
+            if (success) {
+                updateSettings({ pushNotificationsEnabled: true });
+            }
+        }
+    };
 
     const handleThemeChange = (value: Theme) => {
         updateSettings({ theme: value });
@@ -101,8 +115,14 @@ export default function Settings() {
         }
     };
 
+    const handleLogout = async () => {
+        await unsubscribeFromPush();
+        window.location.reload();
+    };
+
     const handleDeleteAccount = async () => {
         try {
+            await unsubscribeFromPush();
             await API.delete("/users/me");
             localStorage.clear();
             navigate("/register");
@@ -161,6 +181,21 @@ export default function Settings() {
                             </Select>
                         </Section>
 
+                        {/* Push Notifications */}
+                        <Section title="Push Notifications">
+                            <p className="text-sm text-muted-foreground">
+                                Receive notifications when you get a message while the app is in the background.
+                            </p>
+                            <Button
+                                variant="outline"
+                                className="w-full justify-start gap-2"
+                                onClick={handlePushToggle}
+                            >
+                                {pushEnabled ? <Bell className="h-4 w-4" /> : <BellOff className="h-4 w-4" />}
+                                {pushEnabled ? "Notifications enabled" : "Notifications disabled"}
+                            </Button>
+                        </Section>
+
                         {/* Manage Data */}
                         <Section title="Manage Data">
                             <div className="space-y-2">
@@ -202,7 +237,7 @@ export default function Settings() {
                         <Button
                             variant="ghost"
                             className="w-full justify-start gap-2 text-muted-foreground"
-                            onClick={() => window.location.reload()}
+                            onClick={handleLogout}
                         >
                             <LogOut className="h-4 w-4" />
                             Log out

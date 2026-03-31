@@ -9,6 +9,7 @@ import FocusHandler from 'components/FocusHandler';
 import { useEffect } from 'react';
 import 'react-toastify/dist/ReactToastify.css';
 import { useAuthStore } from 'stores/auth';
+import usePushNotifications from 'hooks/usePushNotifications';
 
 const Debug = () => {
   const user = useAuthStore(s => s.user)
@@ -26,6 +27,7 @@ const Debug = () => {
 function App() {
 
   const theme = useAuthStore(s => s.user?.settings.theme ?? 'dark')
+  usePushNotifications()
 
   useEffect(() => {
     const html = document.documentElement
