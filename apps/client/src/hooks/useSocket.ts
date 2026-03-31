@@ -2,7 +2,7 @@ import API from "API"
 import { refreshToken } from "API/refreshToken"
 import useArchiveMessage from "pages/Main/handlers/useArchiveMessage"
 import useMessageStatus from "pages/Main/handlers/useMessageStatus"
-import { useEffect, useMemo, useRef, useState } from "react"
+import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { toast } from "react-toastify"
 import { io } from "socket.io-client"
 import { useAuthStore } from "stores/auth"
@@ -26,11 +26,18 @@ export default function useSocket() {
     const [connected, setConnected] = useState(false)
 
     const archiveMessage = useArchiveMessage()
-
     const handleMessageStatus = useMessageStatus()
+    const updateMessage = useUpdateMessage()
+
+    // Stable refs so the socket useEffect doesn't re-run on every render
+    const archiveMessageRef = useRef(archiveMessage)
+    archiveMessageRef.current = archiveMessage
+    const handleMessageStatusRef = useRef(handleMessageStatus)
+    handleMessageStatusRef.current = handleMessageStatus
+    const updateMessageRef = useRef(updateMessage)
+    updateMessageRef.current = updateMessage
 
     const typingTimeouts = useRef<TimeoutMap>({})
-    const updateMessage = useUpdateMessage()
 
     useEffect(() => {
         if (!socket) return
@@ -38,8 +45,8 @@ export default function useSocket() {
         API.get<Queue>("/queues").then(({ data: queue }) => {
             const { messages = [], status = [], reactions = [] } = queue || {}
             try {
-                messages.forEach(msg => archiveMessage(msg, { showToast: false }))
-                status.forEach(msg => handleMessageStatus(msg))
+                messages.forEach(msg => archiveMessageRef.current(msg, { showToast: false }))
+                status.forEach(msg => handleMessageStatusRef.current(msg))
                 reactions.forEach(reaction => handleMessageReaction(reaction))
             } catch (error) {
                 console.log("Handle dequeue error:", error)
@@ -48,7 +55,7 @@ export default function useSocket() {
 
         const handleArchiveMessage = (message: ReceivedMessage, ack: Function) => {
             try {
-                archiveMessage(message, { showToast: true })
+                archiveMessageRef.current(message, { showToast: true })
                 ack(JSON.stringify({ "hash": message.hash }))
             } catch (error) {
                 ack(JSON.stringify({ error: (error as Error) }))
@@ -107,7 +114,7 @@ export default function useSocket() {
                 }
             }
 
-            updateMessage({ chatId, hash, updater })
+            updateMessageRef.current({ chatId, hash, updater })
             ack?.()
         }
 
@@ -140,7 +147,7 @@ export default function useSocket() {
         }
 
         socket.on('in-msg', handleArchiveMessage)
-        socket.on('msg-status', handleMessageStatus)
+        socket.on('msg-status', (msg: MessageStatusUpdate) => handleMessageStatusRef.current(msg))
         socket.on('typing', handleTyping)
         socket.on('in-reaction', handleMessageReaction)
         socket.on('connect', onConnect)
@@ -149,7 +156,7 @@ export default function useSocket() {
 
         return () => {
             socket.off('in-msg', handleArchiveMessage)
-            socket.off('msg-status', handleMessageStatus)
+            socket.off('msg-status')
             socket.off('typing', handleTyping)
             socket.off('in-reaction', handleMessageReaction)
             socket.off('connect', onConnect)
@@ -157,7 +164,7 @@ export default function useSocket() {
             socket.off('connect_error', handleRefreshToken);
         }
 
-    }, [socket, archiveMessage, handleMessageStatus, updateMessage])
+    }, [socket])
 
     return { socket, connected }
 }

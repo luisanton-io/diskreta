@@ -15,7 +15,7 @@ export default function usePushNotifications() {
     useEffect(() => {
         if (isLoggedIn && pushEnabled && !prevLoggedIn.current) {
             // User just logged in with push enabled — subscribe
-            subscribeToPush()
+            subscribeToPush().catch(() => {/* ignore — VAPID may not be configured */})
         }
         prevLoggedIn.current = isLoggedIn
     }, [isLoggedIn, pushEnabled])

@@ -96,9 +96,18 @@ If ALL stories are complete and passing, reply with:
 
 If there are still stories with `passes: false`, end your response normally (another iteration will pick up the next story).
 
+## Context Management
+
+You have limited context. Be surgical:
+- Read the `notes` field on each story — it tells you exactly which files to touch
+- Do NOT read large files that are irrelevant to your current story
+- Do NOT read the entire codebase to "understand the project" — read only what you need
+- If a file is over 200 lines and you only need to change a small part, read just that part
+- Start coding early — don't spend most of your context on exploration
+
 ## Important
 
-- Work on ONE story per iteration
+- Work on ONE story per iteration — once it's done, commit, update the PRD, update progress.txt, and STOP. Do not start the next story. Do not use remaining context to explore or refactor. Just finish and exit.
 - Commit frequently
 - Keep CI green
 - Read the Codebase Patterns section in progress.txt before starting

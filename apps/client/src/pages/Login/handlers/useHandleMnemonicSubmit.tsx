@@ -55,7 +55,7 @@ export default function useHandleMnemonicSubmit(mnemonic: React.MutableRefObject
                     withHysteresis(
                         (async () =>
                             responseUser.publicKey === pki.publicKeyToPem(publicKey)
-                                ? privateKey
+                                ? { privateKey, publicKey }
                                 : Promise.reject()
                         )()
                     )
@@ -67,7 +67,7 @@ export default function useHandleMnemonicSubmit(mnemonic: React.MutableRefObject
                     },
                 )
             })
-            .then((privateKey) => {
+            .then(({ privateKey, publicKey }) => {
 
                 // From now we can safely assume that the keys for user {nick} were generated using the same mnemonic
 
@@ -92,6 +92,7 @@ export default function useHandleMnemonicSubmit(mnemonic: React.MutableRefObject
                 return {
                     user: {
                         ...responseUser,
+                        publicKey: pki.publicKeyToPem(publicKey),
                         privateKey: pki.privateKeyToPem(privateKey),
                         settings: defaultSettings
                     },

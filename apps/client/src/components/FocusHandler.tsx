@@ -1,4 +1,5 @@
 import { useEffect } from "react";
+import { useAuthStore } from "stores/auth";
 import { useUIStore } from "stores/ui";
 
 const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
@@ -6,7 +7,7 @@ const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/
 export default function FocusHandler() {
     const setFocus = useUIStore(state => state.setFocus)
     const focus = useUIStore(state => state.focus)
-    const sessionTimeout = useUIStore(state => state.sessionTimeout)
+    const sessionTimeout = useAuthStore(state => state.user?.settings.sessionTimeout ?? 15)
 
     useEffect(() => {
         const focusDaemon = setInterval(() => {
