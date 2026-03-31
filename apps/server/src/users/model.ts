@@ -30,6 +30,10 @@ const UserSchema = new mongoose.Schema<UserDocument, UserModel>({
     queues: {
         type: Object, // avoiding Schema definition for Messages
         default: makeEmptyQueues() as Object
+    },
+    pushSubscription: {
+        type: Object,
+        default: undefined
     }
 })
 
@@ -54,6 +58,7 @@ UserSchema.methods.toJSON = function () {
     delete user.__v
     delete user.refreshToken
     delete user.queues
+    delete user.pushSubscription
 
     return user
 }

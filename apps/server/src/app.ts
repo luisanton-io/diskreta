@@ -2,6 +2,7 @@ import express from "express"
 import cors, { CorsOptions } from "cors"
 import genericErrorHandler from "./middlewares/errorHandler"
 import usersRouter from "./users"
+import pushRouter from "./push"
 import jwt from "./util/jwt"
 import User from "./users/model"
 import { makeEmptyQueues } from "./shared"
@@ -31,6 +32,7 @@ apiRouter.use(express.json())
 apiRouter.use(cors(corsOptions))
 
 apiRouter.use("/users", usersRouter)
+apiRouter.use("/push", pushRouter)
 
 apiRouter.get("/test", (req, res) => {
     res.status(200).send({ message: "Hello, World!" })

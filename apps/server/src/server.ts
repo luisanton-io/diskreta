@@ -7,6 +7,7 @@ import shared, { makeEmptyQueues } from "./shared";
 import User from "./users/model";
 import jwt from "./util/jwt";
 import messageReaction from "./events/messageReaction";
+import { sendPushNotification } from "./push";
 
 const httpServer = createServer(app);
 const io = new Server(httpServer, {
@@ -90,6 +91,9 @@ io.on("connection", async socket => {
                             "queues.messages": forwardingMessage
                         }
                     })
+
+                    // Send push notification to offline recipient
+                    sendPushNotification(recipientId).catch(console.error)
 
                 } catch (error) {
                     console.log(error)

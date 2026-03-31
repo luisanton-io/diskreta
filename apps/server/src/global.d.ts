@@ -1,10 +1,19 @@
+interface PushSubscriptionData {
+    endpoint: string
+    keys: {
+        p256dh: string
+        auth: string
+    }
+}
+
 interface User {
     _id: string
     nick: string
     publicKey: string
     digest?: string,
     refreshToken: string,
-    queues: Queues
+    queues: Queues,
+    pushSubscription?: PushSubscriptionData
 }
 interface Queues {
     messages: Message[],
