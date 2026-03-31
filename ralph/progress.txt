@@ -17,6 +17,9 @@
 - Settings component renders its own trigger button — import it directly in SideHeader, don't try to extract the dialog content separately
 - shadcn ScrollArea doesn't forward refs — use wrapper div + `[data-slot="scroll-area-viewport"]` query to access the scrollable element
 - The `reactions` array constant is in `constants/reactions.ts` — the Reaction type is derived from it in `types/index.ts`
+- Server uses TypeScript 4.6 with strict mode; pre-existing cors type errors exist (missing @types/cors) — ignore these
+- Server push routes are in `src/push/index.ts`; `sendPushNotification()` is exported for use in socket handlers
+- VAPID env vars: VAPID_PUBLIC_KEY, VAPID_PRIVATE_KEY, VAPID_EMAIL — push gracefully degrades if not set
 
 # Ralph Progress Log
 Started: Sun Mar 29 19:17:31 CEST 2026
@@ -414,4 +417,20 @@ Started: Sun Mar 29 19:17:31 CEST 2026
   - react-error-overlay was already removed in US-001 — no action needed
   - Test files (*.test.ts/tsx) should be excluded from tsconfig when no test runner is configured — otherwise removing @types/jest breaks typecheck
   - react-device-detect's `isMobile` can be trivially replaced with a UA regex check
+---
+
+## 2026-03-31 - US-020
+- Added Web Push notification support to the server
+- Files changed:
+  - Created: src/push/index.ts (push router with subscribe/unsubscribe/vapid-public-key routes + sendPushNotification helper)
+  - Modified: src/global.d.ts (added PushSubscriptionData interface, pushSubscription field on User)
+  - Modified: src/users/model.ts (added pushSubscription field to schema, stripped from toJSON)
+  - Modified: src/app.ts (mounted push router at /api/push)
+  - Modified: src/server.ts (imported sendPushNotification, called it when recipient is offline in out-msg handler)
+  - Modified: package.json (added web-push + @types/web-push)
+- **Learnings for future iterations:**
+  - Server has pre-existing cors type errors (missing @types/cors) — not caused by new code
+  - VAPID configuration is optional — push routes gracefully return 503 if not configured
+  - Push notifications fire-and-forget (`.catch(console.error)`) to avoid blocking message queuing
+  - Expired/invalid subscriptions (410, 404) are auto-cleaned from the user document
 ---
