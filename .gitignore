@@ -10,3 +10,5 @@ coverage
 *.log
 .pnp
 .pnp.js
+ralph/.last-branch
+ralph/progress.txt
