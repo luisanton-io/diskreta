@@ -57,8 +57,8 @@ export async function sendPushNotification(userId: string): Promise<void> {
     if (!user?.pushSubscription) return
 
     const payload = JSON.stringify({
-        title: "Diskreta",
-        body: "You have a new message"
+        title: "New message",
+        body: "You have a new encrypted message"
     })
 
     try {
