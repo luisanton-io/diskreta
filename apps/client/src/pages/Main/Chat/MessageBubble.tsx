@@ -239,7 +239,7 @@ export default function MessageBubble({ message, sent }: Props) {
               className={cn(
                 "rounded-2xl px-3 py-2",
                 sent
-                  ? "bg-primary text-primary-foreground"
+                  ? "bg-blue-600 dark:bg-blue-700 text-white"
                   : "bg-muted text-foreground"
               )}
               {...longPressHandlers}
@@ -251,7 +251,7 @@ export default function MessageBubble({ message, sent }: Props) {
                   className={cn(
                     "mb-1 w-full rounded-lg px-3 py-2 text-left text-xs border-l-4",
                     sent
-                      ? "bg-primary-foreground/15 border-primary-foreground/50"
+                      ? "bg-white/15 border-white/30"
                       : "bg-background/50 border-foreground/30"
                   )}
                 >
@@ -263,7 +263,7 @@ export default function MessageBubble({ message, sent }: Props) {
                   </p>
                   <p className={cn(
                     "m-0 truncate",
-                    sent ? "text-primary-foreground/70" : "text-muted-foreground"
+                    sent ? "text-white/70" : "text-muted-foreground"
                   )}>
                     {replyingText || "📷 Photo"}
                   </p>
@@ -301,7 +301,7 @@ export default function MessageBubble({ message, sent }: Props) {
               <div
                 className={cn(
                   "mt-1 flex items-center justify-end gap-1 text-[0.65rem] leading-none",
-                  sent ? "text-primary-foreground/70" : "text-muted-foreground"
+                  sent ? "text-white/70" : "text-muted-foreground"
                 )}
               >
                 <span>{messageTime}</span>

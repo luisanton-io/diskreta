@@ -43,7 +43,7 @@ export default function ServerEcho() {
 
 
     return <div>
-        <Button variant="outline" className="h-[42px] text-yellow-500 border-yellow-500 hover:bg-yellow-500/10" onClick={() => { setServerView(v => !v) }}>
+        <Button variant="outline" className="w-full h-[42px] text-yellow-500 border-yellow-500 hover:bg-yellow-500/10" onClick={() => { setServerView(v => !v) }}>
             {serverView ? "Hide" : "Show"} server logs
         </Button>
         {
