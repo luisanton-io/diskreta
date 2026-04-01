@@ -33,12 +33,12 @@ API.interceptors.response.use(
             })
         } else if (
             error.response.status === 401 &&
+            !failedRequest._retried &&
             !["/users/session", "/users/refreshToken"].includes(failedRequest.url)
         ) {
+            failedRequest._retried = true;
             await refreshToken();
-
-            const retryRequest = API(failedRequest);
-            return retryRequest;
+            return API(failedRequest);
         } else {
             return Promise.reject(error);
         }

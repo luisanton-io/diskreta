@@ -52,22 +52,16 @@ export default function useHandleSubmit(nick: string, password: string) {
 
                 const token = pki.privateKeyFromPem(hydratedUser.privateKey).decrypt(util.decode64(encryptedToken))
 
-                await new Promise<void>((resolve) => {
-                    setTimeout(() => {
-                        useAuthStore.getState().setUser({
-                            // @ts-ignore - defaultSettings for retrocompatibility for users who didn't have settings in previous versions
-                            settings: defaultSettings,
-                            ...hydratedUser,
-                            token,
-                            refreshToken
-                        })
-
-                        navigate("/")
-                        toast.dismiss()
-                        resolve()
-
-                    }, 1000)
+                useAuthStore.getState().setUser({
+                    // @ts-ignore - defaultSettings for retrocompatibility for users who didn't have settings in previous versions
+                    settings: defaultSettings,
+                    ...hydratedUser,
+                    token,
+                    refreshToken
                 })
+
+                navigate("/")
+                toast.dismiss()
             } catch {
                 toast.update(toastId, { render: "User data decryption failed. Regenerate keys?", type: "error" })
                 handleRegenerate(encryptedToken, refreshToken, responseUser)

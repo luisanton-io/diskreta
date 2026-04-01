@@ -39,19 +39,40 @@ export default function useSocket() {
 
     const typingTimeouts = useRef<TimeoutMap>({})
 
+    // Disconnect socket when tab is hidden, reconnect when visible
     useEffect(() => {
         if (!socket) return
 
-        API.get<Queue>("/queues").then(({ data: queue }) => {
-            const { messages = [], status = [], reactions = [] } = queue || {}
-            try {
-                messages.forEach(msg => archiveMessageRef.current(msg, { showToast: false }))
-                status.forEach(msg => handleMessageStatusRef.current(msg))
-                reactions.forEach(reaction => handleMessageReaction(reaction))
-            } catch (error) {
-                console.log("Handle dequeue error:", error)
+        const handleVisibilityChange = () => {
+            if (document.hidden) {
+                socket.disconnect()
+            } else {
+                socket.connect()
             }
-        })
+        }
+
+        document.addEventListener("visibilitychange", handleVisibilityChange)
+        return () => document.removeEventListener("visibilitychange", handleVisibilityChange)
+    }, [socket])
+
+    useEffect(() => {
+        if (!socket) return
+
+        const dequeue = () => {
+            API.get<Queue>("/queues").then(({ data: queue }) => {
+                const { messages = [], status = [], reactions = [] } = queue || {}
+                try {
+                    messages.forEach(msg => archiveMessageRef.current(msg, { showToast: false }))
+                    status.forEach(msg => handleMessageStatusRef.current(msg))
+                    reactions.forEach(reaction => handleMessageReaction(reaction))
+                } catch (error) {
+                    console.log("Handle dequeue error:", error)
+                }
+            })
+        }
+
+        // Dequeue on initial connect and every reconnect
+        dequeue()
 
         const handleArchiveMessage = (message: ReceivedMessage, ack: Function) => {
             try {
@@ -123,7 +144,11 @@ export default function useSocket() {
             refreshToken()
         }
 
-        const onDisconnect = () => {
+        const onDisconnect = (reason: string) => {
+            setConnected(false)
+            // Don't show toast or refresh token if we intentionally disconnected (tab hidden)
+            if (reason === "io client disconnect") return
+
             toast.info("Connecting...", { position: toast.POSITION.TOP_CENTER, autoClose: false })
             const { chats, setChats } = useChatsStore.getState()
             if (chats) {
@@ -137,13 +162,15 @@ export default function useSocket() {
                 setChats(cleared)
             }
             refreshToken()
-            setConnected(false)
         }
 
         const onConnect = () => {
             toast.dismiss()
-            toast.success("Connected!", { position: toast.POSITION.TOP_CENTER, autoClose: 2000 })
+            if (!document.hidden) {
+                toast.success("Connected!", { position: toast.POSITION.TOP_CENTER, autoClose: 2000 })
+            }
             setConnected(true)
+            dequeue()
         }
 
         socket.on('in-msg', handleArchiveMessage)

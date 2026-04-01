@@ -1,7 +1,7 @@
 import API from "API";
 import { AxiosError } from "axios";
 import { CHATS, USER, USER_DIGEST } from "constants/localStorage";
-import { Bell, BellOff, Download, LogOut, Settings as SettingsIcon, Trash2, Upload } from "lucide-react";
+import { Bell, BellOff, Download, Loader2, LogOut, Settings as SettingsIcon, Trash2, Upload } from "lucide-react";
 import { useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuthStore } from "stores/auth";
@@ -59,23 +59,29 @@ export default function Settings() {
     const [deleteOpen, setDeleteOpen] = useState(false);
     const [importOpen, setImportOpen] = useState(false);
     const [error, setError] = useState("");
+    const [pushLoading, setPushLoading] = useState(false);
 
     const navigate = useNavigate();
     const theme = useAuthStore(s => s.user?.settings.theme ?? "dark") as Theme;
     const sessionTimeout = useAuthStore(s => s.user?.settings.sessionTimeout ?? 15);
-    const pushEnabled = useAuthStore(s => s.user?.settings.pushNotificationsEnabled ?? true);
+    const pushEnabled = useAuthStore(s => s.user?.settings.pushNotificationsEnabled ?? false);
     const updateSettings = useAuthStore(s => s.updateSettings);
     const importedDataRef = useRef("");
 
     const handlePushToggle = async () => {
-        if (pushEnabled) {
-            await unsubscribeFromPush();
-            updateSettings({ pushNotificationsEnabled: false });
-        } else {
-            const success = await subscribeToPush();
-            if (success) {
-                updateSettings({ pushNotificationsEnabled: true });
+        setPushLoading(true);
+        try {
+            if (pushEnabled) {
+                await unsubscribeFromPush();
+                updateSettings({ pushNotificationsEnabled: false });
+            } else {
+                const success = await subscribeToPush();
+                if (success) {
+                    updateSettings({ pushNotificationsEnabled: true });
+                }
             }
+        } finally {
+            setPushLoading(false);
         }
     };
 
@@ -190,8 +196,12 @@ export default function Settings() {
                                 variant="outline"
                                 className="w-full justify-start gap-2"
                                 onClick={handlePushToggle}
+                                disabled={pushLoading}
                             >
-                                {pushEnabled ? <Bell className="h-4 w-4" /> : <BellOff className="h-4 w-4" />}
+                                {pushLoading
+                                    ? <Loader2 className="h-4 w-4 animate-spin" />
+                                    : pushEnabled ? <Bell className="h-4 w-4" /> : <BellOff className="h-4 w-4" />
+                                }
                                 {pushEnabled ? "Notifications enabled" : "Notifications disabled"}
                             </Button>
                         </Section>

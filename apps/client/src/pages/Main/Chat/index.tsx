@@ -1,7 +1,7 @@
 import Diskreta from "components/Diskreta"
 import useActiveChat from "hooks/useActiveChat"
-import useSocket from "hooks/useSocket"
-import React, { useState } from "react"
+import React, { useContext, useState } from "react"
+import { SocketContext } from "../index"
 import ChatBody from "./ChatBody"
 import ChatHeader from "./ChatHeader"
 import { ChatContext } from "./context/ChatCtx"
@@ -10,7 +10,7 @@ import ServerEcho from "./ServerEcho"
 import Spotlight, { SpotlightProps } from "./Spotlight"
 
 export default function Chat() {
-  const { socket, connected } = useSocket()
+  const { socket, connected } = useContext(SocketContext)
 
   const { activeChat, recipients } = useActiveChat()
 
